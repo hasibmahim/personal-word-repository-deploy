@@ -2,13 +2,19 @@ FROM python:3.13-slim
 
 WORKDIR /app
 
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends nginx \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-RUN mkdir -p /app/instance
+RUN mkdir -p /app/instance /tmp/nginx-client-body /tmp/nginx-proxy /tmp/nginx-fastcgi /tmp/nginx-uwsgi /tmp/nginx-scgi
+RUN chgrp -R 0 /app && chmod -R g=u /app
+RUN chgrp -R 0 /var/lib/nginx /var/log/nginx /etc/nginx /tmp && chmod -R g=u /var/lib/nginx /var/log/nginx /etc/nginx /tmp
 
-EXPOSE 5000
+EXPOSE 8080
 
-CMD ["sh", "-c", "python init_db.py && python -m flask --app wordrepo.api:create_app run --host=0.0.0.0 --port=5000"]
+CMD ["supervisord", "-c", "/app/deploy/supervisord.conf"]

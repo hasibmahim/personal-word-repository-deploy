@@ -123,6 +123,64 @@ Stop the service with:
 docker compose down
 ```
 
+## Quick Publish On Rahti
+
+The fastest way to publish this API with the available university services is to use `Rahti Container Cloud`.
+
+1. Log in to Rahti and create a project.
+2. Click the `+` button in the web console and choose `Import from Git`.
+3. Use this repository URL:
+
+```text
+https://github.com/sam2025202512/PersonalWordRepository
+```
+
+4. Let Rahti detect the `Dockerfile` and create the application.
+5. Expose the service by creating a Route if one is not created automatically.
+6. Open the generated URL and test:
+
+```text
+/
+/docs
+/openapi.yaml
+```
+
+Note: the current deployment uses SQLite inside the container. That is fine for a quick publish/demo, but the data is not durable unless you attach persistent storage or move the database to a managed service such as Pukki.
+
+## Best Persistent Deployment
+
+For a persistent deployment on CSC services, the recommended setup is:
+
+- `Rahti` for running the API container
+- `Pukki` for a managed PostgreSQL database
+- `Gunicorn` as the Python WSGI application server
+- `NGINX` as the web server and reverse proxy
+- `Supervisor` for process control inside the container
+
+The application already supports a database URL through the `SQLALCHEMY_DATABASE_URI` environment variable. In Rahti, set it to a PostgreSQL connection string, for example:
+
+```text
+postgresql+psycopg://USERNAME:PASSWORD@HOSTNAME:5432/DATABASE_NAME
+```
+
+With this setup, application data is stored outside the container and remains available across pod restarts and redeployments.
+
+## Deployment Architecture
+
+Recommended production-style deployment:
+
+- Public client -> `HTTPS` -> `Rahti Route`
+- `Rahti Route` -> `HTTP` -> `NGINX` inside the container
+- `NGINX` -> `HTTP` -> `Gunicorn`
+- `Gunicorn` -> `SQLAlchemy` -> `PostgreSQL` in `Pukki`
+
+This setup gives a clear separation of concerns:
+
+- `NGINX` handles incoming HTTP traffic and reverse proxies requests
+- `Gunicorn` runs the Flask application as a proper WSGI application server
+- `Supervisor` keeps both processes managed in the same container
+- `Pukki` stores the persistent database outside the application container
+
 
 ## API entry point
 

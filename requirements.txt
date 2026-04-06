@@ -1,3 +1,6 @@
 Flask
 Flask-SQLAlchemy
 Flask-RESTful
+psycopg[binary]
+gunicorn
+supervisor

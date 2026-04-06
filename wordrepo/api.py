@@ -78,4 +78,9 @@ def create_app(config=None):
         """Serve Swagger UI for the OpenAPI specification."""
         return Response(SWAGGER_UI_HTML, mimetype="text/html")
 
+    @app.get("/healthz")
+    def healthz():
+        """Health endpoint for platform probes."""
+        return {"status": "ok"}, 200
+
     return app
