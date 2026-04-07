@@ -3,6 +3,11 @@ import uuid
 from flask import request
 from flask_restful import Resource
 from wordrepo.models import db, Category, User
+from wordrepo.validation import (
+    CATEGORY_CREATE_SCHEMA,
+    CATEGORY_UPDATE_SCHEMA,
+    validate_request_json,
+)
 
 def category_to_dict(category):
     """Creates a dictionary for category."""
@@ -17,9 +22,9 @@ class CategoryListResource(Resource):
     """Handles POST for categories."""
     def post(self):
         """Create a new category."""
-        data = request.get_json() or {}
-        if not data or "name" not in data or "user_id" not in data:
-            return {"error": "name and user_id are required"}, 400
+        data, error = validate_request_json(request, CATEGORY_CREATE_SCHEMA)
+        if error:
+            return error
         #validate the user
         user = User.query.get(data["user_id"])
         if not user:
@@ -52,7 +57,9 @@ class CategoryResource(Resource):
         category = Category.query.get(category_id)
         if not category:
             return {"error": "category not found"}, 404
-        data = request.get_json() or {}
+        data, error = validate_request_json(request, CATEGORY_UPDATE_SCHEMA)
+        if error:
+            return error
         if "name" in data:
             existing_category = Category.query.filter_by(
                 user_id=category.user_id,

@@ -4,3 +4,4 @@ Flask-RESTful
 psycopg[binary]
 gunicorn
 supervisor
+jsonschema

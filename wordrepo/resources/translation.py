@@ -3,6 +3,11 @@ import uuid
 from flask import request
 from flask_restful import Resource
 from wordrepo.models import db, Translation, Word
+from wordrepo.validation import (
+    TRANSLATION_CREATE_SCHEMA,
+    TRANSLATION_UPDATE_SCHEMA,
+    validate_request_json,
+)
 
 def translation_to_dict(t):
     """Creates a dictionary for translation."""
@@ -28,10 +33,9 @@ class TranslationListResource(Resource):
         word = Word.query.get(word_id)
         if not word:
             return {"error": "word not found"}, 404
-        data = request.get_json()
-        required = ["text", "language"]
-        if not all(field in data for field in required):
-            return {"error":"text and language are required"}, 400
+        data, error = validate_request_json(request, TRANSLATION_CREATE_SCHEMA)
+        if error:
+            return error
         new_translation = Translation(
            id = str(uuid.uuid4()),
            word_id = word_id,
@@ -56,7 +60,9 @@ class TranslationResource(Resource):
         t = Translation.query.get(translation_id)
         if not t:
             return {"error": "translation not found"}, 404
-        data = request.get_json() or {}
+        data, error = validate_request_json(request, TRANSLATION_UPDATE_SCHEMA)
+        if error:
+            return error
         if "text" in data:
             t.text = data["text"]
         if "language" in data:

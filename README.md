@@ -24,11 +24,13 @@ This project implements a RESTful API for storing, categorizing and translating 
 ## Dependencies
 
 Project dependencies are listed in `requirements.txt`.
+Developer and testing dependencies are listed in `requirements-dev.txt`.
 
 Main dependencies:
 - Flask
 - Flask-SQLAlchemy
 - Flask-RESTful
+- jsonschema
 ---
 
 ## Running the project
@@ -53,6 +55,7 @@ python -m venv venv
 
 ```powershell
 pip install -r requirements.txt
+pip install -r requirements-dev.txt
 ```
 
 4. Initialize the database:
@@ -85,6 +88,7 @@ source venv/bin/activate
 
 ```bash
 pip install -r requirements.txt
+pip install -r requirements-dev.txt
 ```
 
 4. Initialize the database:
@@ -132,7 +136,7 @@ The fastest way to publish this API with the available university services is to
 3. Use this repository URL:
 
 ```text
-https://github.com/sam2025202512/PersonalWordRepository
+https://github.com/hasibmahim/personal-word-repository-deploy.git
 ```
 
 4. Let Rahti detect the `Dockerfile` and create the application.
@@ -140,7 +144,7 @@ https://github.com/sam2025202512/PersonalWordRepository
 6. Open the generated URL and test:
 
 ```text
-/
+/healthz
 /docs
 /openapi.yaml
 ```
@@ -205,6 +209,24 @@ The raw OpenAPI file is available at:
 ```text
 http://127.0.0.1:5000/openapi.yaml
 ```
+
+## Running Tests
+
+Run the automated tests from the project root:
+
+```bash
+python -m pytest -q
+```
+
+## Coverage Report
+
+Generate the test coverage report with:
+
+```bash
+python -m pytest --cov=wordrepo --cov-report=term-missing
+```
+
+This command shows line-by-line coverage information in the terminal so the API implementation and tested branches can be demonstrated during review.
 
 ## Code Quality
 

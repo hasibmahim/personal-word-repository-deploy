@@ -4,6 +4,11 @@ from flask import request
 from flask_restful import Resource
 from werkzeug.security import generate_password_hash
 from wordrepo.models import db, User
+from wordrepo.validation import (
+    USER_CREATE_SCHEMA,
+    USER_UPDATE_SCHEMA,
+    validate_request_json,
+)
 
 API_KEY = "API_KEY_12345"
 
@@ -29,10 +34,9 @@ class UserListResource(Resource):
 
     def post(self):
         """Create a new user"""
-        data = request.get_json()
-        # Check that everything required is given
-        if not data or "email" not in data or "password" not in data:
-            return {"error": "email and password are required"}, 400
+        data, error = validate_request_json(request, USER_CREATE_SCHEMA)
+        if error:
+            return error
         #Check if email already in use
         if User.query.filter_by(email=data["email"]).first():
             return {"error": "email already in use"}, 409
@@ -58,7 +62,9 @@ class UserResource(Resource):
         user = User.query.get(user_id)
         if not user:
             return {"error": "user not found"}, 404
-        data = request.get_json() or {}
+        data, error = validate_request_json(request, USER_UPDATE_SCHEMA)
+        if error:
+            return error
         if "email" in data:
             existing_user = User.query.filter_by(email=data["email"]).first()
             if existing_user and existing_user.id != user.id:

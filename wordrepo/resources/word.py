@@ -3,6 +3,11 @@ import uuid
 from flask import request
 from flask_restful import Resource
 from wordrepo.models import db, Word, User, PartOfSpeech, Category
+from wordrepo.validation import (
+    WORD_CREATE_SCHEMA,
+    WORD_UPDATE_SCHEMA,
+    validate_request_json,
+)
 
 def word_to_dict(word):
     """Creates a dictionary for words."""
@@ -19,11 +24,9 @@ class WordListResource(Resource):
     """Handles POST for words."""
     def post(self):
         """Create a new word."""
-        data = request.get_json() or {}
-        required = ["text", "language", "user_id", "part_of_speech_id"]
-        #Check that everything required is given in the data
-        if not all(field in data for field in required):
-            return {"error": "text, language, user_id and part_of_speech_id are required"}, 400
+        data, error = validate_request_json(request, WORD_CREATE_SCHEMA)
+        if error:
+            return error
         #validate user
         if not User.query.get(data["user_id"]):
             return {"error": "user not found"}, 404
@@ -61,7 +64,9 @@ class WordResource(Resource):
         word = Word.query.get(word_id)
         if not word:
             return {"error": "word not found"}, 404
-        data = request.get_json() or {}
+        data, error = validate_request_json(request, WORD_UPDATE_SCHEMA)
+        if error:
+            return error
         # check what is changed
         if "text" in data:
             word.text = data["text"]

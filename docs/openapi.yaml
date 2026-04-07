@@ -5,7 +5,7 @@ info:
   description: |
     REST API for storing, categorizing, and translating personal vocabulary.
 servers:
-  - url: https://personal-word-repository-deploy-git-pwp-2026.2.rahtiapp.fi
+  - url: http://wordrepo-api-mahim-pwp-2026.2.rahtiapp.fi
 tags:
   - name: Users
   - name: Words

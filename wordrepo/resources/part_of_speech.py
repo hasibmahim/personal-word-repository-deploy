@@ -1,8 +1,14 @@
 """Resource module for managing parts of speech."""
-import uuid
-from flask import request
+import hashlib
+import json
+from flask import make_response, request
 from flask_restful import Resource
 from wordrepo.models import db, PartOfSpeech
+from wordrepo.validation import (
+    PART_OF_SPEECH_CREATE_SCHEMA,
+    PART_OF_SPEECH_UPDATE_SCHEMA,
+    validate_request_json,
+)
 
 def pos_to_dict(pos):
     """Creates a dictionary for part of speech."""
@@ -18,12 +24,24 @@ class PartOfSpeechListResource(Resource):
     def get(self):
         """Return all parts of speech"""
         parts = PartOfSpeech.query.all()
-        return [pos_to_dict(p) for p in parts], 200
-    def post(self):
-        data = request.get_json()
+        payload = [pos_to_dict(p) for p in parts]
+        etag = hashlib.sha256(
+            json.dumps(payload, sort_keys=True).encode("utf-8")
+        ).hexdigest()
 
-        if not data or "name" not in data or "code" not in data:
-            return {"error": "name and code are required"}, 400
+        if request.if_none_match.contains(etag):
+            response = make_response("", 304)
+        else:
+            response = make_response(payload, 200)
+
+        response.set_etag(etag)
+        response.headers["Cache-Control"] = "public, max-age=300"
+        return response
+
+    def post(self):
+        data, error = validate_request_json(request, PART_OF_SPEECH_CREATE_SCHEMA)
+        if error:
+            return error
 
         if PartOfSpeech.query.filter_by(code=data["code"]).first():
             return {"error": "part of speech already exists"}, 409
@@ -45,7 +63,9 @@ class PartOfSpeechResource(Resource):
         pos = PartOfSpeech.query.get(pos_id)
         if not pos:
             return {"error": "part of speech not found"}, 404
-        data = request.get_json()
+        data, error = validate_request_json(request, PART_OF_SPEECH_UPDATE_SCHEMA)
+        if error:
+            return error
         if "name" in data:
             pos.name = data["name"]
         db.session.commit()
