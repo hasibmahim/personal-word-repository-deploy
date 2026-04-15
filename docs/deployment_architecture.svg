@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="860" viewBox="0 0 1280 860" role="img" aria-labelledby="title desc">
+  <title id="title">Personal Word Repository Deployment Architecture</title>
+  <desc id="desc">Architecture diagram showing browser clients, GitHub source, Rahti route, Docker container with NGINX, Gunicorn, Flask and Supervisor, and PostgreSQL on Pukki.</desc>
+  <defs>
+    <style>
+      .bg { fill: #f7f3ea; }
+      .panel { fill: #fffdf8; stroke: #cfc7b7; stroke-width: 2; rx: 18; ry: 18; }
+      .box { fill: #ffffff; stroke: #274056; stroke-width: 2.2; rx: 14; ry: 14; }
+      .box-soft { fill: #eef7f4; stroke: #1f6f68; stroke-width: 2.2; rx: 14; ry: 14; }
+      .box-cloud { fill: #eef2ff; stroke: #4255a4; stroke-width: 2.2; rx: 14; ry: 14; }
+      .box-data { fill: #fff4e7; stroke: #a56421; stroke-width: 2.2; rx: 14; ry: 14; }
+      .title { font: 700 30px Georgia, serif; fill: #1f2f3b; }
+      .subtitle { font: 600 18px Georgia, serif; fill: #465866; }
+      .label { font: 600 22px Georgia, serif; fill: #1f2f3b; }
+      .small { font: 500 17px Georgia, serif; fill: #42525d; }
+      .tiny { font: 500 15px Georgia, serif; fill: #5a6974; }
+      .arrow { stroke: #2f4858; stroke-width: 3; fill: none; marker-end: url(#arrowhead); }
+      .dashed { stroke-dasharray: 8 8; }
+    </style>
+    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#2f4858" />
+    </marker>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="1280" height="860" />
+
+  <text class="title" x="640" y="52" text-anchor="middle">Personal Word Repository Deployment Architecture</text>
+  <text class="subtitle" x="640" y="82" text-anchor="middle">Deadline 4 deployment overview with cloud hosting, control system, web server, application server, and database</text>
+
+  <rect class="box" x="70" y="180" width="220" height="110" />
+  <text class="label" x="180" y="225" text-anchor="middle">User / Browser</text>
+  <text class="small" x="180" y="255" text-anchor="middle">Uses live API and docs</text>
+
+  <rect class="box-cloud" x="70" y="500" width="220" height="130" />
+  <text class="label" x="180" y="545" text-anchor="middle">GitHub Repository</text>
+  <text class="small" x="180" y="575" text-anchor="middle">Source code, Dockerfile,</text>
+  <text class="small" x="180" y="600" text-anchor="middle">OpenAPI, deployment files</text>
+
+  <rect class="box-cloud" x="380" y="130" width="840" height="610" />
+  <text class="label" x="800" y="175" text-anchor="middle">CSC Rahti Container Cloud</text>
+  <text class="small" x="800" y="205" text-anchor="middle">Public deployment environment</text>
+
+  <rect class="box-cloud" x="430" y="250" width="250" height="115" />
+  <text class="label" x="555" y="295" text-anchor="middle">Rahti Route</text>
+  <text class="small" x="555" y="325" text-anchor="middle">Public endpoint</text>
+  <text class="small" x="555" y="348" text-anchor="middle">HTTP / HTTPS entry</text>
+
+  <rect class="panel" x="740" y="235" width="420" height="440" />
+  <text class="label" x="950" y="275" text-anchor="middle">Docker Container</text>
+  <text class="small" x="950" y="302" text-anchor="middle">Application runtime inside Rahti</text>
+
+  <rect class="box-soft" x="805" y="335" width="290" height="85" />
+  <text class="label" x="950" y="370" text-anchor="middle">NGINX</text>
+  <text class="small" x="950" y="397" text-anchor="middle">Web server / reverse proxy</text>
+
+  <rect class="box-soft" x="805" y="460" width="290" height="85" />
+  <text class="label" x="950" y="495" text-anchor="middle">Gunicorn</text>
+  <text class="small" x="950" y="522" text-anchor="middle">WSGI application server</text>
+
+  <rect class="box-soft" x="805" y="585" width="290" height="85" />
+  <text class="label" x="950" y="620" text-anchor="middle">Flask API</text>
+  <text class="small" x="950" y="647" text-anchor="middle">wordrepo.api:create_app()</text>
+
+  <rect class="box" x="1110" y="370" width="85" height="240" />
+  <text class="label" x="1152" y="470" text-anchor="middle" transform="rotate(90 1152 470)">Supervisor</text>
+  <text class="tiny" x="1152" y="510" text-anchor="middle" transform="rotate(90 1152 510)">controls NGINX and Gunicorn</text>
+
+  <rect class="box-data" x="430" y="535" width="250" height="125" />
+  <text class="label" x="555" y="580" text-anchor="middle">CSC Pukki</text>
+  <text class="small" x="555" y="610" text-anchor="middle">PostgreSQL database</text>
+  <text class="small" x="555" y="635" text-anchor="middle">Persistent storage</text>
+
+  <text class="tiny" x="330" y="220">HTTP / HTTPS</text>
+  <line class="arrow" x1="290" y1="235" x2="430" y2="290" />
+
+  <text class="tiny" x="695" y="300">HTTP</text>
+  <line class="arrow" x1="680" y1="307" x2="805" y2="377" />
+
+  <text class="tiny" x="965" y="440">proxy_pass http://127.0.0.1:8000</text>
+  <line class="arrow" x1="950" y1="420" x2="950" y2="460" />
+
+  <text class="tiny" x="950" y="570" text-anchor="middle">WSGI call</text>
+  <line class="arrow" x1="950" y1="545" x2="950" y2="585" />
+
+  <text class="tiny" x="710" y="610">SQLAlchemy + psycopg</text>
+  <line class="arrow" x1="805" y1="627" x2="680" y2="597" />
+
+  <text class="tiny" x="330" y="540">Git push / source import</text>
+  <line class="arrow dashed" x1="290" y1="555" x2="430" y2="555" />
+
+  <text class="tiny" x="555" y="523" text-anchor="middle">Rahti builds image from repository</text>
+
+  <line class="arrow dashed" x1="1110" y1="392" x2="1095" y2="392" />
+  <line class="arrow dashed" x1="1110" y1="503" x2="1095" y2="503" />
+
+  <text class="tiny" x="950" y="720" text-anchor="middle">Runtime stack: Docker + Supervisor + NGINX + Gunicorn + Flask + PostgreSQL</text>
+  <text class="tiny" x="950" y="744" text-anchor="middle">Documentation served live at /docs and /openapi.yaml, health endpoint at /healthz</text>
+</svg>
