@@ -5,3 +5,4 @@ __pycache__/
 .codex
 instance/
 *.db
+client/client_state.json

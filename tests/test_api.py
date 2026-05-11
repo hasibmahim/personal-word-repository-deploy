@@ -343,6 +343,63 @@ def test_get_word_success(client):
     assert response.json["id"] == word["id"]
 
 
+def test_list_words_returns_all_words(client):
+    user = create_user(client)
+    pos = create_part_of_speech(client, code="word-list-all", name="verb")
+    create_word(client, user["id"], pos["id"], text="run")
+    create_word(client, user["id"], pos["id"], text="walk")
+
+    response = client.get("/words")
+
+    assert response.status_code == 200
+    assert len(response.json) == 2
+
+
+def test_list_words_can_filter_by_user(client):
+    first_user = create_user(client, email="first-words@example.com")
+    second_user = create_user(client, email="second-words@example.com")
+    pos = create_part_of_speech(client, code="word-list-user", name="noun")
+    first_word = create_word(client, first_user["id"], pos["id"], text="cat")
+    create_word(client, second_user["id"], pos["id"], text="dog")
+
+    response = client.get(f"/words?user_id={first_user['id']}")
+
+    assert response.status_code == 200
+    assert response.json == [first_word]
+
+
+def test_list_words_can_filter_by_category(client):
+    user = create_user(client)
+    pos = create_part_of_speech(client, code="word-list-category", name="adjective")
+    animals = create_category(client, user["id"], "animals")
+    colors = create_category(client, user["id"], "colors")
+    animal_word = client.post(
+        "/words",
+        json={
+            "text": "fox",
+            "language": "en",
+            "user_id": user["id"],
+            "part_of_speech_id": pos["id"],
+            "category_ids": [animals["id"]],
+        },
+    ).json
+    client.post(
+        "/words",
+        json={
+            "text": "blue",
+            "language": "en",
+            "user_id": user["id"],
+            "part_of_speech_id": pos["id"],
+            "category_ids": [colors["id"]],
+        },
+    )
+
+    response = client.get(f"/words?category_id={animals['id']}")
+
+    assert response.status_code == 200
+    assert response.json == [animal_word]
+
+
 def test_update_word_success(client):
     user = create_user(client)
     pos = create_part_of_speech(client, code="verb-a", name="verb")
@@ -456,6 +513,29 @@ def test_get_category_success(client):
     response = client.get(f"/categories/{category['id']}")
     assert response.status_code == 200
     assert response.json["id"] == category["id"]
+
+
+def test_list_categories_returns_all_categories(client):
+    user = create_user(client)
+    create_category(client, user["id"], "animals")
+    create_category(client, user["id"], "verbs")
+
+    response = client.get("/categories")
+
+    assert response.status_code == 200
+    assert [item["name"] for item in response.json] == ["animals", "verbs"]
+
+
+def test_list_categories_can_filter_by_user(client):
+    first_user = create_user(client, email="first-categories@example.com")
+    second_user = create_user(client, email="second-categories@example.com")
+    first_category = create_category(client, first_user["id"], "animals")
+    create_category(client, second_user["id"], "colors")
+
+    response = client.get(f"/categories?user_id={first_user['id']}")
+
+    assert response.status_code == 200
+    assert response.json == [first_category]
 
 
 def test_update_category_duplicate_name(client):

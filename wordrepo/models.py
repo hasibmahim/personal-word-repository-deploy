@@ -15,7 +15,7 @@ class User(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     words = db.relationship("Word", back_populates="user", cascade="all, delete-orphan")
-    categories = db.relationship("Category", back_populates="user", 
+    categories = db.relationship("Category", back_populates="user",
                                  cascade="all, delete-orphan")
 
 class PartOfSpeech(db.Model):
@@ -48,7 +48,7 @@ class Category(db.Model):
 
     id = db.Column(db.String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     name = db.Column(db.String(50), nullable=False)
-    user_id = db.Column(db.String(36), db.ForeignKey("user.id", ondelete="CASCADE"), 
+    user_id = db.Column(db.String(36), db.ForeignKey("user.id", ondelete="CASCADE"),
                         nullable=False)
 
     user = db.relationship("User", back_populates="categories")
@@ -71,7 +71,7 @@ class Word(db.Model):
 
     user = db.relationship("User", back_populates="words")
     part_of_speech = db.relationship("PartOfSpeech", back_populates="words")
-    translations = db.relationship("Translation", back_populates="word", 
+    translations = db.relationship("Translation", back_populates="word",
                                    cascade="all, delete-orphan")
     categories = db.relationship("Category", secondary="word_category", back_populates="words")
 
