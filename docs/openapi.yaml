@@ -185,6 +185,48 @@ paths:
               example:
                 error: user not found
   /words:
+    get:
+      tags: [Words]
+      summary: List words
+      description: Returns all words, optionally filtered by `user_id` and/or `category_id`.
+      parameters:
+        - name: user_id
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: category_id
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: A list of words
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Word"
+              examples:
+                all-words:
+                  value:
+                    - id: 50d55fa6-166d-4cb6-a023-9d932dce5a7f
+                      user_id: 24f7376f-d0ce-4412-8d1e-c3642ec696df
+                      text: run
+                      language: en
+                      part_of_speech_id: 2
+                      categories: []
+                    - id: 45e5af92-0d1b-4d89-ae14-bd38b695fa8f
+                      user_id: 24f7376f-d0ce-4412-8d1e-c3642ec696df
+                      text: cat
+                      language: en
+                      part_of_speech_id: 1
+                      categories:
+                        - 8dc4bffa-c17c-449f-86f2-d9e3e8782339
     post:
       tags: [Words]
       summary: Create a word
@@ -534,6 +576,38 @@ paths:
               example:
                 error: translation not found
   /categories:
+    get:
+      tags: [Categories]
+      summary: List categories
+      description: Returns all categories, optionally filtered by `user_id`.
+      parameters:
+        - name: user_id
+          in: query
+          required: false
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: A list of categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Category"
+              examples:
+                categories:
+                  value:
+                    - id: 8dc4bffa-c17c-449f-86f2-d9e3e8782339
+                      user_id: 24f7376f-d0ce-4412-8d1e-c3642ec696df
+                      name: animals
+                      words:
+                        - 50d55fa6-166d-4cb6-a023-9d932dce5a7f
+                    - id: 4f601270-00db-49f4-bb51-6d4e4f98104f
+                      user_id: 24f7376f-d0ce-4412-8d1e-c3642ec696df
+                      name: verbs
+                      words: []
     post:
       tags: [Categories]
       summary: Create a category
