@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard · Word Repository GUI{% endblock %}
+
+{% block content %}
+  <section class="hero">
+    <div>
+      <p class="eyebrow">Overview</p>
+      <h3>Keep your vocabulary organized and ready to study.</h3>
+      <p class="lede">
+        This browser client sits on top of the same REST API and study-pack service
+        as the terminal version, but gives you a cleaner daily workflow.
+      </p>
+    </div>
+    <div class="health-badge health-{{ health.status }}">
+      <span>{{ health.status|upper }}</span>
+      <small>{{ health.detail }}</small>
+    </div>
+  </section>
+
+  <section class="stats-grid">
+    <article class="stat-card">
+      <p class="eyebrow">Tracked words</p>
+      <strong>{{ words|length }}</strong>
+    </article>
+    <article class="stat-card">
+      <p class="eyebrow">Tracked categories</p>
+      <strong>{{ categories|length }}</strong>
+    </article>
+    <article class="stat-card">
+      <p class="eyebrow">Translations</p>
+      <strong>{{ translation_count }}</strong>
+    </article>
+    <article class="stat-card">
+      <p class="eyebrow">Missing translations</p>
+      <strong>{{ study_summary.count if study_summary else "—" }}</strong>
+    </article>
+  </section>
+
+  <section class="panel-grid">
+    <article class="panel">
+      <div class="panel-header">
+        <div>
+          <p class="eyebrow">Recent words</p>
+          <h3>Vocabulary snapshot</h3>
+        </div>
+        <a class="link-chip" href="{{ url_for('words') }}">Open words</a>
+      </div>
+      {% if words %}
+        <ul class="resource-list">
+          {% for word in words %}
+            <li>
+              <div>
+                <strong>{{ word.text }}</strong>
+                <span>{{ word.language }}</span>
+              </div>
+              <a href="{{ url_for('word_detail', word_id=word.id) }}">Details</a>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="empty-state">Create or activate a user to start tracking words.</p>
+      {% endif %}
+    </article>
+
+    <article class="panel">
+      <div class="panel-header">
+        <div>
+          <p class="eyebrow">Recent categories</p>
+          <h3>Collection structure</h3>
+        </div>
+        <a class="link-chip" href="{{ url_for('categories') }}">Open categories</a>
+      </div>
+      {% if categories %}
+        <ul class="resource-list">
+          {% for category in categories %}
+            <li>
+              <div>
+                <strong>{{ category.name }}</strong>
+                <span>{{ category.words|length }} linked words</span>
+              </div>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="empty-state">Categories appear here once an active user adds them.</p>
+      {% endif %}
+    </article>
+  </section>
+
+  <section class="panel">
+    <div class="panel-header">
+      <div>
+        <p class="eyebrow">Study service</p>
+        <h3>Learning focus</h3>
+      </div>
+      <a class="link-chip" href="{{ url_for('study_packs') }}">Open study packs</a>
+    </div>
+    {% if study_error %}
+      <p class="empty-state">{{ study_error }}</p>
+    {% elif study_summary %}
+      <p class="lede">
+        The auxiliary service currently sees <strong>{{ study_summary.count }}</strong>
+        word{{ "" if study_summary.count == 1 else "s" }} without translations for
+        the active user.
+      </p>
+    {% else %}
+      <p class="empty-state">Study pack insights appear here when a user is active.</p>
+    {% endif %}
+  </section>
+{% endblock %}

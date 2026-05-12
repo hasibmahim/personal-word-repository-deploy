@@ -230,7 +230,9 @@ This command shows line-by-line coverage information in the terminal so the API 
 
 ## Deadline 5 Client
 
-The Deadline 5 client now lives under [client/main.py](/workspaces/PersonalWordRepository/client/main.py) as a Python terminal client built with `requests`.
+The Deadline 5 client now lives under `client/` in two forms:
+- `client/web.py` for the browser-based GUI
+- [client/main.py](/workspaces/PersonalWordRepository/client/main.py) for the original terminal client
 
 Install the client dependency:
 
@@ -238,7 +240,19 @@ Install the client dependency:
 pip install -r client/requirements.txt
 ```
 
-Then run the client after the API is running:
+Then run the GUI client after the API is running:
+
+```bash
+python client/web.py
+```
+
+The GUI is available at:
+
+```text
+http://127.0.0.1:8001
+```
+
+You can still run the terminal client with:
 
 ```bash
 python client/main.py

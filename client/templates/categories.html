@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}Categories · Word Repository GUI{% endblock %}
+
+{% block content %}
+  <section class="panel-grid">
+    <article class="panel">
+      <div class="panel-header">
+        <div>
+          <p class="eyebrow">New category</p>
+          <h3>Create a grouping for words</h3>
+        </div>
+      </div>
+      <form class="stack-form" method="post" action="{{ url_for('create_category') }}">
+        <label>
+          <span>Category name</span>
+          <input type="text" name="name" placeholder="Travel verbs" required>
+        </label>
+        <button type="submit">Create category</button>
+      </form>
+    </article>
+
+    <article class="panel">
+      <div class="panel-header">
+        <div>
+          <p class="eyebrow">Existing categories</p>
+          <h3>Rename or remove</h3>
+        </div>
+      </div>
+      {% if categories %}
+        <div class="stack-list">
+          {% for category in categories %}
+            <form class="translation-card" method="post" action="{{ url_for('update_category', category_id=category.id) }}">
+              <label>
+                <span>Name</span>
+                <input type="text" name="name" value="{{ category.name }}" required>
+              </label>
+              <p class="inline-note">{{ category.words|length }} linked words</p>
+              <div class="action-row">
+                <button class="ghost-button" type="submit">Save</button>
+                <button
+                  class="danger-button"
+                  type="submit"
+                  formaction="{{ url_for('delete_category', category_id=category.id) }}"
+                >
+                  Delete
+                </button>
+              </div>
+            </form>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="empty-state">No categories yet. Add one to organize the collection.</p>
+      {% endif %}
+    </article>
+  </section>
+{% endblock %}

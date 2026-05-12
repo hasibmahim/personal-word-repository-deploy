@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Words · Word Repository GUI{% endblock %}
+
+{% block content %}
+  <section class="panel-grid">
+    <article class="panel">
+      <div class="panel-header">
+        <div>
+          <p class="eyebrow">New word</p>
+          <h3>Add vocabulary to the active user</h3>
+        </div>
+      </div>
+      <form class="stack-form" method="post" action="{{ url_for('create_word') }}">
+        <label>
+          <span>Word text</span>
+          <input type="text" name="text" placeholder="bonjour" required>
+        </label>
+        <label>
+          <span>Language code</span>
+          <input type="text" name="language" placeholder="fr" required>
+        </label>
+        <label>
+          <span>Part of speech</span>
+          <select name="part_of_speech_id" required>
+            {% for part in parts_of_speech %}
+              <option value="{{ part.id }}">{{ part.name }} ({{ part.code }})</option>
+            {% endfor %}
+          </select>
+        </label>
+        <fieldset class="checkbox-grid">
+          <legend>Categories</legend>
+          {% for category in categories %}
+            <label>
+              <input type="checkbox" name="category_ids" value="{{ category.id }}">
+              <span>{{ category.name }}</span>
+            </label>
+          {% endfor %}
+        </fieldset>
+        <button type="submit">Create word</button>
+      </form>
+    </article>
+
+    <article class="panel">
+      <div class="panel-header">
+        <div>
+          <p class="eyebrow">Vocabulary list</p>
+          <h3>Tracked words</h3>
+        </div>
+      </div>
+      {% if words %}
+        <ul class="resource-list">
+          {% for word in words %}
+            <li>
+              <div>
+                <strong>{{ word.text }}</strong>
+                <span>{{ word.language }} · {{ word.categories|length }} categories</span>
+              </div>
+              <a href="{{ url_for('word_detail', word_id=word.id) }}">Open</a>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="empty-state">No words yet. Create one to start building the collection.</p>
+      {% endif %}
+    </article>
+  </section>
+{% endblock %}

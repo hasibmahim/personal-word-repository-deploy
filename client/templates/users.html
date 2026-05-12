@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Users · Word Repository GUI{% endblock %}
+
+{% block content %}
+  <section class="panel-grid">
+    <article class="panel">
+      <div class="panel-header">
+        <div>
+          <p class="eyebrow">Create learner</p>
+          <h3>Add a local user profile</h3>
+        </div>
+      </div>
+      <form class="stack-form" method="post" action="{{ url_for('create_user') }}">
+        <label>
+          <span>Email</span>
+          <input type="email" name="email" placeholder="learner@example.com" required>
+        </label>
+        <label>
+          <span>Password</span>
+          <input type="password" name="password" placeholder="Choose a password" required>
+        </label>
+        <button type="submit">Create user</button>
+      </form>
+    </article>
+
+    <article class="panel">
+      <div class="panel-header">
+        <div>
+          <p class="eyebrow">Saved users</p>
+          <h3>Switch the active learner</h3>
+        </div>
+      </div>
+      {% if users %}
+        <ul class="resource-list">
+          {% for user in users %}
+            <li>
+              <div>
+                <strong>{{ user.email }}</strong>
+                <span>{{ user.id }}</span>
+              </div>
+              <form method="post" action="{{ url_for('activate_user', user_id=user.id) }}">
+                <button class="ghost-button" type="submit">Activate</button>
+              </form>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="empty-state">Created users are stored locally here for quick reuse.</p>
+      {% endif %}
+    </article>
+  </section>
+{% endblock %}

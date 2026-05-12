@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}{{ word.text }} · Word Repository GUI{% endblock %}
+
+{% block content %}
+  <section class="panel-grid">
+    <article class="panel">
+      <div class="panel-header">
+        <div>
+          <p class="eyebrow">Word details</p>
+          <h3>Edit {{ word.text }}</h3>
+        </div>
+      </div>
+      <form class="stack-form" method="post" action="{{ url_for('update_word', word_id=word.id) }}">
+        <label>
+          <span>Word text</span>
+          <input type="text" name="text" value="{{ word.text }}" required>
+        </label>
+        <label>
+          <span>Language code</span>
+          <input type="text" name="language" value="{{ word.language }}" required>
+        </label>
+        <label>
+          <span>Part of speech</span>
+          <select name="part_of_speech_id" required>
+            {% for part in parts_of_speech %}
+              <option value="{{ part.id }}" {% if part.id == word.part_of_speech_id %}selected{% endif %}>
+                {{ part.name }} ({{ part.code }})
+              </option>
+            {% endfor %}
+          </select>
+        </label>
+        <fieldset class="checkbox-grid">
+          <legend>Categories</legend>
+          {% for category in categories %}
+            <label>
+              <input
+                type="checkbox"
+                name="category_ids"
+                value="{{ category.id }}"
+                {% if category.id in word.categories %}checked{% endif %}
+              >
+              <span>{{ category.name }}</span>
+            </label>
+          {% endfor %}
+        </fieldset>
+        <div class="action-row">
+          <button type="submit">Save changes</button>
+          <button
+            class="danger-button"
+            type="submit"
+            formaction="{{ url_for('delete_word', word_id=word.id) }}"
+          >
+            Delete word
+          </button>
+        </div>
+      </form>
+    </article>
+
+    <article class="panel">
+      <div class="panel-header">
+        <div>
+          <p class="eyebrow">Translations</p>
+          <h3>Add and edit meanings</h3>
+        </div>
+      </div>
+      <form class="stack-form" method="post" action="{{ url_for('create_translation', word_id=word.id) }}">
+        <label>
+          <span>Translation</span>
+          <input type="text" name="text" placeholder="hello" required>
+        </label>
+        <label>
+          <span>Language code</span>
+          <input type="text" name="language" placeholder="en" required>
+        </label>
+        <label>
+          <span>Note</span>
+          <input type="text" name="note" placeholder="optional usage hint">
+        </label>
+        <button type="submit">Add translation</button>
+      </form>
+
+      {% if translations %}
+        <div class="stack-list">
+          {% for translation in translations %}
+            <form class="translation-card" method="post" action="{{ url_for('update_translation', translation_id=translation.id) }}">
+              <input type="hidden" name="word_id" value="{{ word.id }}">
+              <label>
+                <span>Text</span>
+                <input type="text" name="text" value="{{ translation.text }}" required>
+              </label>
+              <label>
+                <span>Language</span>
+                <input type="text" name="language" value="{{ translation.language }}" required>
+              </label>
+              <label>
+                <span>Note</span>
+                <input type="text" name="note" value="{{ translation.note or '' }}">
+              </label>
+              <div class="action-row">
+                <button class="ghost-button" type="submit">Save</button>
+                <button
+                  class="danger-button"
+                  type="submit"
+                  formaction="{{ url_for('delete_translation', translation_id=translation.id) }}"
+                >
+                  Delete
+                </button>
+              </div>
+            </form>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="empty-state">No translations yet for this word.</p>
+      {% endif %}
+    </article>
+  </section>
+{% endblock %}

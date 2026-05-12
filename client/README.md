@@ -1,12 +1,14 @@
-# Word Repository Terminal Client
+# Word Repository Clients
 
-This folder contains the Deadline 5 client implemented in Python with
-`requests` and a simple terminal interface.
+This folder contains the Deadline 5 clients implemented in Python:
+- a browser-based Flask GUI
+- the original terminal client
 
 ## Features
 
 - create and load users
 - browse live words for the active user
+- use a clean browser dashboard for daily CRUD workflows
 - list parts of speech
 - create, edit, delete, and inspect words
 - create, edit, delete, and inspect categories
@@ -40,7 +42,27 @@ enough to install:
 pip install -r client/requirements.txt
 ```
 
-## Running the client
+## Running the GUI client
+
+Start the API first, then run:
+
+```bash
+python client/web.py
+```
+
+Open:
+
+```text
+http://127.0.0.1:8001
+```
+
+If you also want the Study Packs page to work, start the auxiliary service too:
+
+```bash
+python auxiliary_service/app.py
+```
+
+## Running the terminal client
 
 Start the API first, then run:
 
@@ -72,12 +94,12 @@ python -m pylint client auxiliary_service wordrepo --disable=missing-module-docs
 ## Demo flow
 
 1. Start the main API.
-2. Launch the terminal client.
-3. Create a user.
+2. Launch the GUI client.
+3. Create or activate a user.
 4. Create a category.
 5. Create a word linked to that category.
-6. Select the word and add a translation.
-7. Open Dashboard to show the tracked totals.
+6. Open the word detail view and add a translation.
+7. Return to Dashboard to show the tracked totals.
 8. Open Study Packs and show a random pack or category pack.
 9. Trigger one handled API error, such as a duplicate user email.
 
@@ -108,6 +130,7 @@ That file keeps:
 
 ## Limitations
 
-- The client is a terminal interface rather than a graphical web UI.
+- The GUI stores saved users locally in the same lightweight JSON state file as
+  the terminal client instead of listing all users from the API.
 - The auxiliary Study Packs menu depends on the separate auxiliary service being
   started and reachable.
