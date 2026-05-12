@@ -258,10 +258,32 @@ You can still run the terminal client with:
 python client/main.py
 ```
 
+For a separate cloud deployment of the GUI client, the repository includes:
+
+```text
+client/Dockerfile
+```
+
+That file is intended for importing the same repository into Rahti as a second
+application with `WORDREPO_API_BASE_URL` pointing at the online API route.
+
 For the integrated study-pack flows, also run:
 
 ```bash
 python auxiliary_service/app.py
+```
+
+For a separate cloud deployment of the auxiliary service, the repository
+includes:
+
+```text
+auxiliary_service/Dockerfile
+```
+
+That deployment should set:
+
+```text
+MAIN_API_BASE_URL=https://your-online-api-route
 ```
 
 The client stores a small local state file so it can remember saved users and

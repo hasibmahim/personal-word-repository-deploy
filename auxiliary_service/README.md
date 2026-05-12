@@ -56,6 +56,22 @@ Environment variables:
 - `PORT`
   - default: `5050`
 
+## Deploying in Rahti
+
+The repository includes a dedicated Dockerfile for the auxiliary service:
+
+```text
+auxiliary_service/Dockerfile
+```
+
+When importing the same repository into Rahti for this service, use:
+
+- Dockerfile path: `auxiliary_service/Dockerfile`
+- environment variable `MAIN_API_BASE_URL` pointing to the online main API route
+
+The service listens on the platform-provided `PORT` value and can be exposed
+through its own route.
+
 ## Current state
 
 The service fetches words, categories, and translations from the main API and

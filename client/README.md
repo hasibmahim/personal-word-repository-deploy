@@ -62,6 +62,23 @@ If you also want the Study Packs page to work, start the auxiliary service too:
 python auxiliary_service/app.py
 ```
 
+## Deploying the GUI in Rahti
+
+The repository includes a dedicated Dockerfile for the GUI client:
+
+```text
+client/Dockerfile
+```
+
+When importing the same repository into Rahti for the GUI, use:
+
+- Dockerfile path: `client/Dockerfile`
+- environment variable `WORDREPO_API_BASE_URL` pointing to the online main API
+- optional environment variable `WORDREPO_AUX_SERVICE_BASE_URL` pointing to the online auxiliary service
+
+The GUI listens on the platform-provided `PORT` value and is suitable for a
+separate public route.
+
 ## Running the terminal client
 
 Start the API first, then run:
