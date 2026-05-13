@@ -1,5 +1,6 @@
 """Tests for terminal-client helper modules."""
 
+import json
 from pathlib import Path
 
 from client.api_client import WordRepositoryApiClient
@@ -288,3 +289,46 @@ def test_gui_study_packs_page_renders_quiz_pack(tmp_path: Path):
     assert response.status_code == 200
     assert b"bonjour" in response.data
     assert b"hello" in response.data
+    assert b"Accepted answer" not in response.data
+    assert b"Check answers" in response.data
+
+
+def test_gui_study_packs_page_scores_quiz_answers(tmp_path: Path):
+    api_client = FakeApiClient()
+    user = api_client.create_user("learner@example.com", "secret123")
+    store = StateStore(tmp_path / "gui_state.json")
+    store.save(ClientState(users=[user], active_user_id=user["id"]))
+    app = create_web_app(
+        api_client=api_client,
+        study_pack_client=FakeStudyPackClient(),
+        state_store=store,
+    )
+
+    quiz_payload = {
+        "count": 1,
+        "questions": [
+            {
+                "question_id": 1,
+                "prompt": "bonjour",
+                "prompt_language": "fr",
+                "accepted_answers": ["hello"],
+                "choices": ["hello", "cat"],
+            }
+        ],
+    }
+
+    response = app.test_client().post(
+        "/study-packs",
+        data={
+            "action": "quiz-score",
+            "quiz_payload": json.dumps(quiz_payload),
+            "answer_1": "cat",
+        },
+    )
+
+    assert response.status_code == 200
+    assert b"Score: 0 / 1" in response.data
+    assert b"Your answer: cat." in response.data
+    assert b"Correct answer:" in response.data
+    assert b"hello." in response.data
+    assert b"Accepted answer" not in response.data

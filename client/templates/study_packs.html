@@ -132,24 +132,60 @@
     {% if quiz_pack %}
       <div class="pack-results">
         <p class="inline-note">{{ quiz_pack["count"] }} question(s)</p>
-        <div class="stack-list">
-          {% for question in quiz_pack["questions"] %}
-            <div class="translation-card">
-              <strong>Q{{ question["question_id"] }}. {{ question["prompt"] }} ({{ question["prompt_language"] }})</strong>
-              <ul class="resource-list">
-                {% for choice in question["choices"] %}
-                  <li>
-                    <div>{{ choice }}</div>
-                  </li>
-                {% endfor %}
-              </ul>
-              <p class="inline-note">
-                Accepted answer{{ "" if question["accepted_answers"]|length == 1 else "s" }}:
-                {{ question["accepted_answers"]|join(", ") }}
-              </p>
-            </div>
-          {% endfor %}
-        </div>
+        {% if quiz_score %}
+          <div class="quiz-score-card">
+            <strong>Score: {{ quiz_score["correct"] }} / {{ quiz_score["total"] }}</strong>
+            <span>{{ quiz_score["percentage"] }}%</span>
+          </div>
+        {% endif %}
+        <form class="stack-form" method="post" action="{{ url_for('load_study_packs') }}">
+          <input type="hidden" name="action" value="quiz-score">
+          <input type="hidden" name="quiz_payload" value="{{ quiz_pack|tojson|forceescape }}">
+          <div class="stack-list">
+            {% for question in quiz_pack["questions"] %}
+              {% set question_key = question["question_id"] ~ '' %}
+              {% set feedback = quiz_feedback.get(question_key) if quiz_feedback else none %}
+              <section class="translation-card quiz-question-card">
+                <strong>Q{{ question["question_id"] }}. {{ question["prompt"] }} ({{ question["prompt_language"] }})</strong>
+                <div class="quiz-choice-list">
+                  {% for choice in question["choices"] %}
+                    {% set is_selected = feedback and feedback["selected_answer"] == choice %}
+                    {% set is_correct_choice = feedback and choice in feedback["accepted_answers"] %}
+                    <label class="quiz-choice{% if quiz_submitted and is_selected and feedback['is_correct'] %} quiz-choice-correct{% elif quiz_submitted and is_selected and not feedback['is_correct'] %} quiz-choice-wrong{% elif quiz_submitted and is_correct_choice %} quiz-choice-reveal{% endif %}">
+                      <input
+                        type="radio"
+                        name="answer_{{ question['question_id'] }}"
+                        value="{{ choice }}"
+                        {% if is_selected %}checked{% endif %}
+                        {% if quiz_submitted %}disabled{% endif %}
+                        required
+                      >
+                      <span>{{ choice }}</span>
+                    </label>
+                  {% endfor %}
+                </div>
+                {% if quiz_submitted and feedback %}
+                  {% if feedback["is_correct"] %}
+                    <p class="quiz-feedback quiz-feedback-correct">Correct.</p>
+                  {% else %}
+                    <p class="quiz-feedback quiz-feedback-wrong">
+                      {% if feedback["selected_answer"] %}
+                        Your answer: {{ feedback["selected_answer"] }}.
+                      {% else %}
+                        No answer selected.
+                      {% endif %}
+                      Correct answer{{ "" if feedback["accepted_answers"]|length == 1 else "s" }}:
+                      {{ feedback["accepted_answers"]|join(", ") }}.
+                    </p>
+                  {% endif %}
+                {% endif %}
+              </section>
+            {% endfor %}
+          </div>
+          {% if not quiz_submitted %}
+            <button type="submit">Check answers</button>
+          {% endif %}
+        </form>
       </div>
     {% endif %}
   </section>

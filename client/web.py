@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import os
 from pathlib import Path
 from typing import Any
@@ -333,6 +334,9 @@ def create_web_app(
             missing_pack=None,
             category_pack=None,
             quiz_pack=None,
+            quiz_feedback=None,
+            quiz_score=None,
+            quiz_submitted=False,
             study_error=None,
         )
 
@@ -348,6 +352,9 @@ def create_web_app(
         missing_pack = None
         category_pack = None
         quiz_pack = None
+        quiz_feedback = None
+        quiz_score = None
+        quiz_submitted = False
         study_error = None
 
         try:
@@ -367,6 +374,10 @@ def create_web_app(
                     count=count,
                     category_id=category_id,
                 )
+            elif action == "quiz-score":
+                quiz_pack = parse_quiz_payload(request.form.get("quiz_payload", ""))
+                quiz_feedback, quiz_score = score_quiz_submission(quiz_pack, request.form)
+                quiz_submitted = True
         except (ValueError, StudyPackError) as error:
             study_error = str(error)
 
@@ -377,6 +388,9 @@ def create_web_app(
             missing_pack=missing_pack,
             category_pack=category_pack,
             quiz_pack=quiz_pack,
+            quiz_feedback=quiz_feedback,
+            quiz_score=quiz_score,
+            quiz_submitted=quiz_submitted,
             study_error=study_error,
         )
 
@@ -448,6 +462,54 @@ def get_api_health() -> dict[str, str]:
         return {"status": payload["status"], "detail": "API reachable"}
     except ApiError as error:
         return {"status": "offline", "detail": str(error)}
+
+
+def parse_quiz_payload(raw_payload: str) -> dict[str, Any]:
+    """Deserialize a rendered quiz payload back into a Python dictionary."""
+    if not raw_payload:
+        raise ValueError("Quiz data is missing. Generate a quiz first.")
+
+    try:
+        quiz_pack = json.loads(raw_payload)
+    except json.JSONDecodeError as exc:
+        raise ValueError("Quiz data is invalid. Generate a fresh quiz.") from exc
+
+    if not isinstance(quiz_pack, dict) or not isinstance(quiz_pack.get("questions"), list):
+        raise ValueError("Quiz data is invalid. Generate a fresh quiz.")
+
+    return quiz_pack
+
+
+def score_quiz_submission(
+    quiz_pack: dict[str, Any],
+    form_data: Any,
+) -> tuple[dict[str, dict[str, Any]], dict[str, int]]:
+    """Score quiz answers and return per-question feedback plus totals."""
+    feedback: dict[str, dict[str, Any]] = {}
+    total_questions = len(quiz_pack.get("questions", []))
+    correct_answers = 0
+
+    for question in quiz_pack.get("questions", []):
+        question_key = str(question["question_id"])
+        selected_answer = form_data.get(f"answer_{question_key}", "").strip()
+        accepted_answers = list(question.get("accepted_answers", []))
+        is_correct = selected_answer in accepted_answers
+        if is_correct:
+            correct_answers += 1
+
+        feedback[question_key] = {
+            "selected_answer": selected_answer,
+            "accepted_answers": accepted_answers,
+            "is_correct": is_correct,
+        }
+
+    percentage = int(round((correct_answers / total_questions) * 100)) if total_questions else 0
+    score = {
+        "correct": correct_answers,
+        "total": total_questions,
+        "percentage": percentage,
+    }
+    return feedback, score
 
 
 def safe_list_parts_of_speech() -> list[dict[str, Any]]:
