@@ -16,7 +16,7 @@ USER_CREATE_SCHEMA = {
 
 USER_UPDATE_SCHEMA = {
     "type": "object",
-    "minProperties": 1,
+    "required": ["email", "password"],
     "properties": {
         "email": {"type": "string", "format": "email"},
         "password": {"type": "string", "minLength": 1},
@@ -42,8 +42,9 @@ WORD_CREATE_SCHEMA = {
 
 WORD_UPDATE_SCHEMA = {
     "type": "object",
-    "minProperties": 1,
+    "required": ["user_id", "text", "language", "part_of_speech_id", "category_ids"],
     "properties": {
+        "user_id": {"type": "string", "minLength": 1},
         "text": {"type": "string", "minLength": 1},
         "language": {"type": "string", "minLength": 1},
         "part_of_speech_id": {"type": "integer"},
@@ -68,8 +69,9 @@ TRANSLATION_CREATE_SCHEMA = {
 
 TRANSLATION_UPDATE_SCHEMA = {
     "type": "object",
-    "minProperties": 1,
+    "required": ["word_id", "text", "language", "note"],
     "properties": {
+        "word_id": {"type": "string", "minLength": 1},
         "text": {"type": "string", "minLength": 1},
         "language": {"type": "string", "minLength": 1},
         "note": {"type": ["string", "null"]},
@@ -89,8 +91,9 @@ CATEGORY_CREATE_SCHEMA = {
 
 CATEGORY_UPDATE_SCHEMA = {
     "type": "object",
-    "required": ["name"],
+    "required": ["user_id", "name"],
     "properties": {
+        "user_id": {"type": "string", "minLength": 1},
         "name": {"type": "string", "minLength": 1},
     },
     "additionalProperties": False,
@@ -108,8 +111,9 @@ PART_OF_SPEECH_CREATE_SCHEMA = {
 
 PART_OF_SPEECH_UPDATE_SCHEMA = {
     "type": "object",
-    "required": ["name"],
+    "required": ["code", "name"],
     "properties": {
+        "code": {"type": "string", "minLength": 1},
         "name": {"type": "string", "minLength": 1},
     },
     "additionalProperties": False,

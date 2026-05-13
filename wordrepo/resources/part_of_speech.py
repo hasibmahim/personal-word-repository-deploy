@@ -68,7 +68,7 @@ class PartOfSpeechResource(Resource):
     """Handles PUT and DELETE for parts of speech."""
 
     def put(self, pos_id):
-        """Update a part of speech."""
+        """Replace a part of speech with a full representation."""
         pos = db.session.get(PartOfSpeech, pos_id)
         if not pos:
             return {"error": "part of speech not found"}, 404
@@ -77,8 +77,12 @@ class PartOfSpeechResource(Resource):
         if error:
             return error
 
-        if "name" in data:
-            pos.name = data["name"]
+        existing_pos = PartOfSpeech.query.filter_by(code=data["code"]).first()
+        if existing_pos and existing_pos.id != pos.id:
+            return {"error": "part of speech already exists"}, 409
+
+        pos.code = data["code"]
+        pos.name = data["name"]
 
         db.session.commit()
         return pos_to_dict(pos), 200
@@ -91,4 +95,4 @@ class PartOfSpeechResource(Resource):
 
         db.session.delete(pos)
         db.session.commit()
-        return {"message": "part of speech deleted"}, 200
+        return "", 204

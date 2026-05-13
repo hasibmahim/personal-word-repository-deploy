@@ -195,8 +195,9 @@ def create_web_app(
         try:
             api_client_from_app().update_word(
                 word_id,
-                text=request.form.get("text", "").strip() or None,
-                language=request.form.get("language", "").strip() or None,
+                user_id=request.form["user_id"],
+                text=request.form.get("text", "").strip(),
+                language=request.form.get("language", "").strip(),
                 part_of_speech_id=int(request.form["part_of_speech_id"]),
                 category_ids=category_ids,
             )
@@ -251,9 +252,11 @@ def create_web_app(
     def update_category(category_id: str):
         try:
             api_client_from_app().update_category(
-                category_id, request.form.get("name", "").strip()
+                category_id,
+                user_id=request.form["user_id"],
+                name=request.form.get("name", "").strip(),
             )
-        except ApiError as error:
+        except (KeyError, ApiError) as error:
             flash(f"Could not update category: {error}", "error")
             return redirect(url_for("categories"))
 
@@ -293,8 +296,9 @@ def create_web_app(
         try:
             api_client_from_app().update_translation(
                 translation_id,
-                text=request.form.get("text", "").strip() or None,
-                language=request.form.get("language", "").strip() or None,
+                word_id=word_id,
+                text=request.form.get("text", "").strip(),
+                language=request.form.get("language", "").strip(),
                 note=request.form.get("note", "").strip() or None,
             )
         except ApiError as error:

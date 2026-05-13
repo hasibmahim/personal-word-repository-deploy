@@ -65,8 +65,9 @@ class WordListResource(Resource):
         if "category_ids" in data:
             for cid in data["category_ids"]:
                 category = db.session.get(Category, cid)
-                if category:
-                    new_word.categories.append(category)
+                if not category:
+                    return {"error": f"category not found: {cid}"}, 404
+                new_word.categories.append(category)
 
         db.session.add(new_word)
         db.session.commit()
@@ -84,7 +85,7 @@ class WordResource(Resource):
         return word_to_dict(word), 200
 
     def put(self, word_id):
-        """Update a word."""
+        """Replace a word's mutable fields with a full representation."""
         word = db.session.get(Word, word_id)
         if not word:
             return {"error": "word not found"}, 404
@@ -93,22 +94,23 @@ class WordResource(Resource):
         if error:
             return error
 
-        if "text" in data:
-            word.text = data["text"]
-        if "language" in data:
-            word.language = data["language"]
-        if "part_of_speech_id" in data:
-            if not db.session.get(PartOfSpeech, data["part_of_speech_id"]):
-                return {"error": "part_of_speech not found"}, 404
-            word.part_of_speech_id = data["part_of_speech_id"]
-        if "category_ids" in data:
-            # Updates replace the whole category set so the client can submit
-            # the exact state it wants reflected on the word.
-            word.categories.clear()
-            for cid in data["category_ids"]:
-                category = db.session.get(Category, cid)
-                if category:
-                    word.categories.append(category)
+        if data["user_id"] != word.user_id:
+            return {"error": "user_id does not match the existing word owner"}, 400
+
+        if not db.session.get(PartOfSpeech, data["part_of_speech_id"]):
+            return {"error": "part_of_speech not found"}, 404
+
+        categories = []
+        for cid in data["category_ids"]:
+            category = db.session.get(Category, cid)
+            if not category:
+                return {"error": f"category not found: {cid}"}, 404
+            categories.append(category)
+
+        word.text = data["text"]
+        word.language = data["language"]
+        word.part_of_speech_id = data["part_of_speech_id"]
+        word.categories = categories
 
         db.session.commit()
         return word_to_dict(word), 200
@@ -121,4 +123,4 @@ class WordResource(Resource):
 
         db.session.delete(word)
         db.session.commit()
-        return {"message": "word deleted"}, 200
+        return "", 204

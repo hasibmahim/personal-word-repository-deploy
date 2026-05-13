@@ -143,7 +143,7 @@ def test_update_user_duplicate_email(client):
     create_user(client, email="second@example.com")
     response = client.put(
         f"/users/{first_user['id']}",
-        json={"email": "second@example.com"},
+        json={"email": "second@example.com", "password": "newsecret123"},
     )
     assert response.status_code == 409
 
@@ -157,7 +157,7 @@ def test_update_user_requires_body(client):
 def test_update_user_not_found(client):
     response = client.put(
         "/users/does-not-exist",
-        json={"email": "updated@example.com"},
+        json={"email": "updated@example.com", "password": "newsecret123"},
     )
     assert response.status_code == 404
 
@@ -175,8 +175,7 @@ def test_update_user_success(client):
 def test_delete_user_success(client):
     user = create_user(client)
     response = client.delete(f"/users/{user['id']}")
-    assert response.status_code == 200
-    assert response.json["message"] == "user deleted"
+    assert response.status_code == 204
 
 
 def test_delete_user_not_found(client):
@@ -221,7 +220,10 @@ def test_parts_of_speech_get_supports_304(client):
 
 def test_update_part_of_speech_success(client):
     pos = create_part_of_speech(client, code="adj", name="adjective")
-    response = client.put(f"/parts-of-speech/{pos['id']}", json={"name": "Adjective"})
+    response = client.put(
+        f"/parts-of-speech/{pos['id']}",
+        json={"code": "adj", "name": "Adjective"},
+    )
     assert response.status_code == 200
     assert response.json["name"] == "Adjective"
 
@@ -235,20 +237,30 @@ def test_update_part_of_speech_requires_valid_body(client):
     assert response.status_code == 400
 
 
+def test_update_part_of_speech_duplicate_code(client):
+    create_part_of_speech(client, code="verb-existing", name="Verb Existing")
+    pos = create_part_of_speech(client, code="verb-new", name="Verb New")
+    response = client.put(
+        f"/parts-of-speech/{pos['id']}",
+        json={"code": "verb-existing", "name": "Verb New"},
+    )
+    assert response.status_code == 409
+
+
 def test_delete_part_of_speech_not_found(client):
     response = client.delete("/parts-of-speech/999")
     assert response.status_code == 404
 
 
 def test_update_part_of_speech_not_found(client):
-    response = client.put("/parts-of-speech/999", json={"name": "Verb"})
+    response = client.put("/parts-of-speech/999", json={"code": "verb", "name": "Verb"})
     assert response.status_code == 404
 
 
 def test_delete_part_of_speech_success(client):
     pos = create_part_of_speech(client, code="delete-pos", name="noun")
     response = client.delete(f"/parts-of-speech/{pos['id']}")
-    assert response.status_code == 200
+    assert response.status_code == 204
 
 
 def test_create_word_success(client):
@@ -329,6 +341,22 @@ def test_create_word_with_categories(client):
     assert response.json["categories"] == [category["id"]]
 
 
+def test_create_word_rejects_missing_category(client):
+    user = create_user(client)
+    pos = create_part_of_speech(client, code="word-missing-category", name="noun")
+    response = client.post(
+        "/words",
+        json={
+            "text": "cat",
+            "language": "en",
+            "user_id": user["id"],
+            "part_of_speech_id": pos["id"],
+            "category_ids": ["missing-category"],
+        },
+    )
+    assert response.status_code == 404
+
+
 def test_get_word_not_found(client):
     response = client.get("/words/does-not-exist")
     assert response.status_code == 404
@@ -405,27 +433,64 @@ def test_update_word_success(client):
     pos = create_part_of_speech(client, code="verb-a", name="verb")
     next_pos = create_part_of_speech(client, code="verb-b", name="adverb")
     word = create_word(client, user["id"], pos["id"])
+    category = create_category(client, user["id"], "running")
     response = client.put(
         f"/words/{word['id']}",
-        json={"text": "running", "part_of_speech_id": next_pos["id"]},
+        json={
+            "user_id": user["id"],
+            "text": "running",
+            "language": "en",
+            "part_of_speech_id": next_pos["id"],
+            "category_ids": [category["id"]],
+        },
     )
     assert response.status_code == 200
     assert response.json["text"] == "running"
     assert response.json["part_of_speech_id"] == next_pos["id"]
+    assert response.json["categories"] == [category["id"]]
 
 
 def test_update_word_not_found(client):
-    response = client.put("/words/does-not-exist", json={"text": "running"})
+    response = client.put(
+        "/words/does-not-exist",
+        json={
+            "user_id": "user-1",
+            "text": "running",
+            "language": "en",
+            "part_of_speech_id": 1,
+            "category_ids": [],
+        },
+    )
     assert response.status_code == 404
 
 
-def test_update_word_language_success(client):
+def test_update_word_replaces_categories_with_empty_list(client):
     user = create_user(client)
     pos = create_part_of_speech(client, code="verb-lang", name="verb")
-    word = create_word(client, user["id"], pos["id"])
-    response = client.put(f"/words/{word['id']}", json={"language": "fi"})
+    category = create_category(client, user["id"], "verbs")
+    word = client.post(
+        "/words",
+        json={
+            "text": "run",
+            "language": "en",
+            "user_id": user["id"],
+            "part_of_speech_id": pos["id"],
+            "category_ids": [category["id"]],
+        },
+    ).json
+    response = client.put(
+        f"/words/{word['id']}",
+        json={
+            "user_id": user["id"],
+            "text": "run",
+            "language": "fi",
+            "part_of_speech_id": pos["id"],
+            "category_ids": [],
+        },
+    )
     assert response.status_code == 200
     assert response.json["language"] == "fi"
+    assert response.json["categories"] == []
 
 
 def test_update_word_invalid_part_of_speech(client):
@@ -434,29 +499,60 @@ def test_update_word_invalid_part_of_speech(client):
     word = create_word(client, user["id"], pos["id"])
     response = client.put(
         f"/words/{word['id']}",
-        json={"part_of_speech_id": 9999},
+        json={
+            "user_id": user["id"],
+            "text": word["text"],
+            "language": word["language"],
+            "part_of_speech_id": 9999,
+            "category_ids": [],
+        },
     )
     assert response.status_code == 404
 
 
-def test_update_word_categories_success(client):
+def test_update_word_rejects_missing_category(client):
     user = create_user(client)
-    pos = create_part_of_speech(client, code="verb-category-update", name="verb")
+    pos = create_part_of_speech(client, code="verb-missing-category", name="verb")
     word = create_word(client, user["id"], pos["id"])
-    category = create_category(client, user["id"], "verbs")
     response = client.put(
         f"/words/{word['id']}",
-        json={"category_ids": [category["id"]]},
+        json={
+            "user_id": user["id"],
+            "text": word["text"],
+            "language": word["language"],
+            "part_of_speech_id": pos["id"],
+            "category_ids": ["missing-category"],
+        },
     )
-    assert response.status_code == 200
-    assert response.json["categories"] == [category["id"]]
+    assert response.status_code == 404
 
 
-def test_update_word_rejects_empty_body(client):
+def test_update_word_rejects_owner_mismatch(client):
+    user = create_user(client)
+    other_user = create_user(client, email="other-owner@example.com")
+    pos = create_part_of_speech(client, code="verb-category-update", name="verb")
+    word = create_word(client, user["id"], pos["id"])
+    response = client.put(
+        f"/words/{word['id']}",
+        json={
+            "user_id": other_user["id"],
+            "text": word["text"],
+            "language": word["language"],
+            "part_of_speech_id": pos["id"],
+            "category_ids": [],
+        },
+    )
+    assert response.status_code == 400
+
+
+def test_update_word_rejects_partial_representation(client):
     user = create_user(client)
     pos = create_part_of_speech(client, code="verb-c", name="verb")
     word = create_word(client, user["id"], pos["id"])
-    response = client.put(f"/words/{word['id']}", json={})
+    response = client.put(
+        f"/words/{word['id']}",
+        json={"text": "running"},
+    )
     assert response.status_code == 400
 
 
@@ -465,7 +561,7 @@ def test_delete_word(client):
     pos = create_part_of_speech(client, code="adjective", name="adjective")
     word = create_word(client, user["id"], pos["id"], text="fast")
     delete_response = client.delete(f"/words/{word['id']}")
-    assert delete_response.status_code == 200
+    assert delete_response.status_code == 204
     get_response = client.get(f"/words/{word['id']}")
     assert get_response.status_code == 404
 
@@ -542,35 +638,55 @@ def test_update_category_duplicate_name(client):
     user = create_user(client)
     first = create_category(client, user["id"], "animals")
     create_category(client, user["id"], "colors")
-    response = client.put(f"/categories/{first['id']}", json={"name": "colors"})
+    response = client.put(
+        f"/categories/{first['id']}",
+        json={"user_id": user["id"], "name": "colors"},
+    )
     assert response.status_code == 409
 
 
 def test_update_category_not_found(client):
-    response = client.put("/categories/does-not-exist", json={"name": "verbs"})
+    response = client.put(
+        "/categories/does-not-exist",
+        json={"user_id": "user-1", "name": "verbs"},
+    )
     assert response.status_code == 404
 
 
-def test_update_category_requires_valid_body(client):
+def test_update_category_rejects_partial_representation(client):
     user = create_user(client)
     category = create_category(client, user["id"], "animals")
-    response = client.put(f"/categories/{category['id']}", json={})
+    response = client.put(f"/categories/{category['id']}", json={"name": "verbs"})
     assert response.status_code == 400
 
 
 def test_update_category_success(client):
     user = create_user(client)
     category = create_category(client, user["id"], "animals")
-    response = client.put(f"/categories/{category['id']}", json={"name": "verbs"})
+    response = client.put(
+        f"/categories/{category['id']}",
+        json={"user_id": user["id"], "name": "verbs"},
+    )
     assert response.status_code == 200
     assert response.json["name"] == "verbs"
+
+
+def test_update_category_rejects_owner_mismatch(client):
+    user = create_user(client)
+    other_user = create_user(client, email="other-category-owner@example.com")
+    category = create_category(client, user["id"], "animals")
+    response = client.put(
+        f"/categories/{category['id']}",
+        json={"user_id": other_user["id"], "name": "verbs"},
+    )
+    assert response.status_code == 400
 
 
 def test_delete_category_success(client):
     user = create_user(client)
     category = create_category(client, user["id"], "verbs")
     response = client.delete(f"/categories/{category['id']}")
-    assert response.status_code == 200
+    assert response.status_code == 204
 
 
 def test_delete_category_not_found(client):
@@ -634,7 +750,12 @@ def test_update_translation_success(client):
     translation = create_translation(client, word["id"])
     response = client.put(
         f"/translations/{translation['id']}",
-        json={"text": "springa", "language": "sv", "note": "colloquial"},
+        json={
+            "word_id": word["id"],
+            "text": "springa",
+            "language": "sv",
+            "note": "colloquial",
+        },
     )
     assert response.status_code == 200
     assert response.json["language"] == "sv"
@@ -643,17 +764,39 @@ def test_update_translation_success(client):
 def test_update_translation_not_found(client):
     response = client.put(
         "/translations/does-not-exist",
-        json={"text": "springa"},
+        json={
+            "word_id": "word-1",
+            "text": "springa",
+            "language": "sv",
+            "note": "colloquial",
+        },
     )
     assert response.status_code == 404
 
 
-def test_update_translation_requires_body(client):
+def test_update_translation_rejects_partial_representation(client):
     user = create_user(client)
     pos = create_part_of_speech(client, code="verb-g", name="verb")
     word = create_word(client, user["id"], pos["id"])
     translation = create_translation(client, word["id"])
-    response = client.put(f"/translations/{translation['id']}", json={})
+    response = client.put(f"/translations/{translation['id']}", json={"text": "springa"})
+    assert response.status_code == 400
+
+
+def test_update_translation_rejects_word_mismatch(client):
+    user = create_user(client)
+    pos = create_part_of_speech(client, code="verb-g2", name="verb")
+    word = create_word(client, user["id"], pos["id"])
+    translation = create_translation(client, word["id"])
+    response = client.put(
+        f"/translations/{translation['id']}",
+        json={
+            "word_id": "different-word",
+            "text": "springa",
+            "language": "sv",
+            "note": None,
+        },
+    )
     assert response.status_code == 400
 
 
@@ -663,7 +806,7 @@ def test_delete_translation_success(client):
     word = create_word(client, user["id"], pos["id"])
     translation = create_translation(client, word["id"])
     response = client.delete(f"/translations/{translation['id']}")
-    assert response.status_code == 200
+    assert response.status_code == 204
 
 
 def test_delete_translation_not_found(client):

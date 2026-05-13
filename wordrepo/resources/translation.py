@@ -69,7 +69,7 @@ class TranslationResource(Resource):
         return translation_to_dict(translation), 200
 
     def put(self, translation_id):
-        """Update a translation."""
+        """Replace a translation's mutable fields with a full representation."""
         translation = db.session.get(Translation, translation_id)
         if not translation:
             return {"error": "translation not found"}, 404
@@ -78,12 +78,12 @@ class TranslationResource(Resource):
         if error:
             return error
 
-        if "text" in data:
-            translation.text = data["text"]
-        if "language" in data:
-            translation.language = data["language"]
-        if "note" in data:
-            translation.note = data["note"]
+        if data["word_id"] != translation.word_id:
+            return {"error": "word_id does not match the existing translation owner"}, 400
+
+        translation.text = data["text"]
+        translation.language = data["language"]
+        translation.note = data["note"]
 
         db.session.commit()
         return translation_to_dict(translation), 200
@@ -96,4 +96,4 @@ class TranslationResource(Resource):
 
         db.session.delete(translation)
         db.session.commit()
-        return {"message": "translation deleted"}, 200
+        return "", 204

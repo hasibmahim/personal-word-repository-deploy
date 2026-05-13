@@ -5,7 +5,7 @@ info:
   description: |
     REST API for storing, categorizing, and translating personal vocabulary.
 servers:
-  - url: http://wordrepo-api-mahim-pwp-2026.2.rahtiapp.fi
+  - url: https://wordrepo-api-fresh-pwp-2026.2.rahtiapp.fi
 tags:
   - name: Users
   - name: Words
@@ -126,17 +126,9 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/UserUpdate"
-            examples:
-              change-email:
-                value:
-                  email: updated@example.com
-              change-password:
-                value:
-                  password: newsecret123
-              change-both:
-                value:
-                  email: updated@example.com
-                  password: newsecret123
+            example:
+              email: updated@example.com
+              password: newsecret123
       responses:
         "200":
           description: User updated
@@ -148,6 +140,19 @@ paths:
                 id: 24f7376f-d0ce-4412-8d1e-c3642ec696df
                 email: updated@example.com
                 created_at: "2026-03-09T18:55:11.318191"
+        "400":
+          description: Full user representation is missing or invalid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                invalid-body:
+                  value:
+                    error: invalid request body
+                invalid-json:
+                  value:
+                    error: invalid JSON body
         "404":
           description: User not found
           content:
@@ -168,14 +173,8 @@ paths:
       tags: [Users]
       summary: Delete a user
       responses:
-        "200":
+        "204":
           description: User deleted
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Message"
-              example:
-                message: user deleted
         "404":
           description: User not found
           content:
@@ -336,15 +335,12 @@ paths:
             schema:
               $ref: "#/components/schemas/WordUpdate"
             examples:
-              rename-word:
+              full-replacement:
                 value:
+                  user_id: 24f7376f-d0ce-4412-8d1e-c3642ec696df
                   text: running
-              change-language-and-pos:
-                value:
                   language: fi
                   part_of_speech_id: 3
-              replace-categories:
-                value:
                   category_ids:
                     - 8dc4bffa-c17c-449f-86f2-d9e3e8782339
       responses:
@@ -358,11 +354,25 @@ paths:
                 id: 50d55fa6-166d-4cb6-a023-9d932dce5a7f
                 user_id: 24f7376f-d0ce-4412-8d1e-c3642ec696df
                 text: running
-                language: en
-                part_of_speech_id: 2
-                categories: []
+                language: fi
+                part_of_speech_id: 3
+                categories:
+                  - 8dc4bffa-c17c-449f-86f2-d9e3e8782339
+        "400":
+          description: Full word representation is missing or inconsistent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                invalid-body:
+                  value:
+                    error: invalid request body
+                owner-mismatch:
+                  value:
+                    error: user_id does not match the existing word owner
         "404":
-          description: Word or part of speech not found
+          description: Word, part of speech, or category not found
           content:
             application/json:
               schema:
@@ -374,18 +384,15 @@ paths:
                 part-of-speech:
                   value:
                     error: part_of_speech not found
+                category:
+                  value:
+                    error: "category not found: 8dc4bffa-c17c-449f-86f2-d9e3e8782339"
     delete:
       tags: [Words]
       summary: Delete a word
       responses:
-        "200":
+        "204":
           description: Word deleted
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Message"
-              example:
-                message: word deleted
         "404":
           description: Word not found
           content:
@@ -525,15 +532,11 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/TranslationUpdate"
-            examples:
-              text-only:
-                value:
-                  text: juosta
-              full-update:
-                value:
-                  text: springa
-                  language: sv
-                  note: colloquial
+            example:
+              word_id: 50d55fa6-166d-4cb6-a023-9d932dce5a7f
+              text: springa
+              language: sv
+              note: colloquial
       responses:
         "200":
           description: Translation updated
@@ -547,6 +550,19 @@ paths:
                 text: springa
                 language: sv
                 note: colloquial
+        "400":
+          description: Full translation representation is missing or inconsistent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                invalid-body:
+                  value:
+                    error: invalid request body
+                owner-mismatch:
+                  value:
+                    error: word_id does not match the existing translation owner
         "404":
           description: Translation not found
           content:
@@ -559,14 +575,8 @@ paths:
       tags: [Translations]
       summary: Delete a translation
       responses:
-        "200":
+        "204":
           description: Translation deleted
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Message"
-              example:
-                message: translation deleted
         "404":
           description: Translation not found
           content:
@@ -701,6 +711,7 @@ paths:
             schema:
               $ref: "#/components/schemas/CategoryUpdate"
             example:
+              user_id: 24f7376f-d0ce-4412-8d1e-c3642ec696df
               name: verbs
       responses:
         "200":
@@ -714,6 +725,19 @@ paths:
                 user_id: 24f7376f-d0ce-4412-8d1e-c3642ec696df
                 name: verbs
                 words: []
+        "400":
+          description: Full category representation is missing or inconsistent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                invalid-body:
+                  value:
+                    error: invalid request body
+                owner-mismatch:
+                  value:
+                    error: user_id does not match the existing category owner
         "404":
           description: Category not found
           content:
@@ -734,14 +758,8 @@ paths:
       tags: [Categories]
       summary: Delete a category
       responses:
-        "200":
+        "204":
           description: Category deleted
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Message"
-              example:
-                message: category deleted
         "404":
           description: Category not found
           content:
@@ -828,6 +846,7 @@ paths:
             schema:
               $ref: "#/components/schemas/PartOfSpeechUpdate"
             example:
+              code: verb
               name: Verb
       responses:
         "200":
@@ -841,6 +860,16 @@ paths:
                 code: verb
                 name: Verb
                 words: []
+        "400":
+          description: Full part-of-speech representation is missing or invalid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                invalid-body:
+                  value:
+                    error: invalid request body
         "404":
           description: Part of speech not found
           content:
@@ -849,18 +878,20 @@ paths:
                 $ref: "#/components/schemas/Error"
               example:
                 error: part of speech not found
+        "409":
+          description: Part of speech already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: part of speech already exists
     delete:
       tags: [Parts of Speech]
       summary: Delete a part of speech
       responses:
-        "200":
+        "204":
           description: Part of speech deleted
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Message"
-              example:
-                message: part of speech deleted
         "404":
           description: Part of speech not found
           content:
@@ -951,6 +982,7 @@ components:
           minLength: 1
     UserUpdate:
       type: object
+      required: [email, password]
       properties:
         email:
           type: string
@@ -1001,7 +1033,11 @@ components:
       additionalProperties: false
     WordUpdate:
       type: object
+      required: [user_id, text, language, part_of_speech_id, category_ids]
       properties:
+        user_id:
+          type: string
+          format: uuid
         text:
           type: string
         language:
@@ -1045,7 +1081,11 @@ components:
       additionalProperties: false
     TranslationUpdate:
       type: object
+      required: [word_id, text, language, note]
       properties:
+        word_id:
+          type: string
+          format: uuid
         text:
           type: string
         language:
@@ -1083,7 +1123,11 @@ components:
       additionalProperties: false
     CategoryUpdate:
       type: object
+      required: [user_id, name]
       properties:
+        user_id:
+          type: string
+          format: uuid
         name:
           type: string
       additionalProperties: false
@@ -1113,7 +1157,10 @@ components:
       additionalProperties: false
     PartOfSpeechUpdate:
       type: object
+      required: [code, name]
       properties:
+        code:
+          type: string
         name:
           type: string
       additionalProperties: false

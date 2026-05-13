@@ -31,6 +31,7 @@
         <div class="stack-list">
           {% for category in categories %}
             <form class="translation-card" method="post" action="{{ url_for('update_category', category_id=category.id) }}">
+              <input type="hidden" name="user_id" value="{{ category.user_id }}">
               <label>
                 <span>Name</span>
                 <input type="text" name="name" value="{{ category.name }}" required>

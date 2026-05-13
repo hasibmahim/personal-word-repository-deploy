@@ -10,11 +10,11 @@ The Personal Word Repository API is a RESTful service for storing, categorizing,
 |---|---|---|---|
 | Users collection | `/users` | `GET`, `POST` | List users and create a new user |
 | Single user | `/users/{user_id}` | `GET`, `PUT`, `DELETE` | Retrieve, update, or delete one user |
-| Words collection | `/words` | `POST` | Create a new word |
+| Words collection | `/words` | `GET`, `POST` | List words and create a new word |
 | Single word | `/words/{word_id}` | `GET`, `PUT`, `DELETE` | Retrieve, update, or delete one word |
 | Word translations collection | `/words/{word_id}/translations` | `GET`, `POST` | List translations for one word and create a translation |
 | Single translation | `/translations/{translation_id}` | `GET`, `PUT`, `DELETE` | Retrieve, update, or delete one translation |
-| Categories collection | `/categories` | `POST` | Create a new category |
+| Categories collection | `/categories` | `GET`, `POST` | List categories and create a new category |
 | Single category | `/categories/{category_id}` | `GET`, `PUT`, `DELETE` | Retrieve, update, or delete one category |
 | Parts of speech collection | `/parts-of-speech` | `GET`, `POST` | List all parts of speech and create a new one |
 | Single part of speech | `/parts-of-speech/{pos_id}` | `PUT`, `DELETE` | Update or delete one part of speech |
@@ -34,10 +34,10 @@ The API uses HTTP methods according to their intended meaning:
 
 - `GET` retrieves resource representations, for example `/users/{user_id}` and `/parts-of-speech`.
 - `POST` creates new resources, for example `/users`, `/words`, `/categories`, and `/words/{word_id}/translations`.
-- `PUT` updates an existing resource, for example `/users/{user_id}` and `/translations/{translation_id}`.
+- `PUT` replaces an existing resource, for example `/users/{user_id}` and `/translations/{translation_id}`. The client sends the full mutable representation rather than only changed fields.
 - `DELETE` removes a resource, for example `/words/{word_id}` and `/categories/{category_id}`.
 
-This method usage is consistent across the API, which supports the REST uniform interface principle. Response codes also follow the same idea: `200` for success, `201` for resource creation, `400` for invalid requests, `401` for unauthorized access, `404` for missing resources, and `409` for conflicts such as duplicate values.
+This method usage is consistent across the API, which supports the REST uniform interface principle. Response codes also follow the same idea: `200` for success, `201` for resource creation, `204` for successful deletion without a response body, `400` for invalid requests, `401` for unauthorized access, `404` for missing resources, and `409` for conflicts such as duplicate values.
 
 ## Statelessness
 

@@ -311,20 +311,21 @@ class TerminalClient:
             return
 
         print("Leave a field empty to keep the current value.")
-        text = input(f"Text [{word['text']}]: ").strip() or None
-        language = input(f"Language [{word['language']}]: ").strip() or None
+        text = input(f"Text [{word['text']}]: ").strip() or word["text"]
+        language = input(f"Language [{word['language']}]: ").strip() or word["language"]
 
         self.prompt_parts_of_speech()
         part_id_input = input(f"Part of speech ID [{word['part_of_speech_id']}]: ").strip()
-        part_of_speech_id = int(part_id_input) if part_id_input else None
+        part_of_speech_id = int(part_id_input) if part_id_input else word["part_of_speech_id"]
 
         category_ids = self.prompt_category_ids(allow_empty=True)
         if category_ids is None:
-            category_ids = None
+            category_ids = word["categories"]
 
         try:
             updated = self.api.update_word(
                 word["id"],
+                user_id=word["user_id"],
                 text=text,
                 language=language,
                 part_of_speech_id=part_of_speech_id,
@@ -387,7 +388,11 @@ class TerminalClient:
 
         name = input(f"Category name [{category['name']}]: ").strip() or category["name"]
         try:
-            updated = self.api.update_category(category["id"], name)
+            updated = self.api.update_category(
+                category["id"],
+                user_id=category["user_id"],
+                name=name,
+            )
         except ApiError as error:
             print(f"Could not update category: {error}")
             return
@@ -466,8 +471,8 @@ class TerminalClient:
         if not translation:
             return
 
-        text = input(f"Translation text [{translation['text']}]: ").strip() or None
-        language = input(f"Language [{translation['language']}]: ").strip() or None
+        text = input(f"Translation text [{translation['text']}]: ").strip() or translation["text"]
+        language = input(f"Language [{translation['language']}]: ").strip() or translation["language"]
         note_prompt = translation["note"] if translation["note"] else ""
         note = input(f"Note [{note_prompt}]: ").strip()
         note_value = note if note else translation["note"]
@@ -475,6 +480,7 @@ class TerminalClient:
         try:
             updated = self.api.update_translation(
                 translation["id"],
+                word_id=translation["word_id"],
                 text=text,
                 language=language,
                 note=note_value,

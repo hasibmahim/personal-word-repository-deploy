@@ -66,7 +66,7 @@ class UserResource(Resource):
         return user_to_dict(user), 200
 
     def put(self, user_id):
-        """Update a user's email or password."""
+        """Replace a user's mutable fields with a full representation."""
         user = db.session.get(User, user_id)
         if not user:
             return {"error": "user not found"}, 404
@@ -75,13 +75,12 @@ class UserResource(Resource):
         if error:
             return error
 
-        if "email" in data:
-            existing_user = User.query.filter_by(email=data["email"]).first()
-            if existing_user and existing_user.id != user.id:
-                return {"error": "email already in use"}, 409
-            user.email = data["email"]
-        if "password" in data:
-            user.password_hash = generate_password_hash(data["password"])
+        existing_user = User.query.filter_by(email=data["email"]).first()
+        if existing_user and existing_user.id != user.id:
+            return {"error": "email already in use"}, 409
+
+        user.email = data["email"]
+        user.password_hash = generate_password_hash(data["password"])
 
         db.session.commit()
         return user_to_dict(user), 200
@@ -94,4 +93,4 @@ class UserResource(Resource):
 
         db.session.delete(user)
         db.session.commit()
-        return {"message": "user deleted"}, 200
+        return "", 204

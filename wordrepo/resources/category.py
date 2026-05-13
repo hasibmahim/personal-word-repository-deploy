@@ -75,7 +75,7 @@ class CategoryResource(Resource):
         return category_to_dict(category), 200
 
     def put(self, category_id):
-        """Update a category."""
+        """Replace a category's mutable fields with a full representation."""
         category = db.session.get(Category, category_id)
         if not category:
             return {"error": "category not found"}, 404
@@ -84,14 +84,17 @@ class CategoryResource(Resource):
         if error:
             return error
 
-        if "name" in data:
-            existing_category = Category.query.filter_by(
-                user_id=category.user_id,
-                name=data["name"],
-            ).first()
-            if existing_category and existing_category.id != category.id:
-                return {"error": "category already exists for user"}, 409
-            category.name = data["name"]
+        if data["user_id"] != category.user_id:
+            return {"error": "user_id does not match the existing category owner"}, 400
+
+        existing_category = Category.query.filter_by(
+            user_id=category.user_id,
+            name=data["name"],
+        ).first()
+        if existing_category and existing_category.id != category.id:
+            return {"error": "category already exists for user"}, 409
+
+        category.name = data["name"]
 
         db.session.commit()
         return category_to_dict(category), 200
@@ -104,4 +107,4 @@ class CategoryResource(Resource):
 
         db.session.delete(category)
         db.session.commit()
-        return {"message": "category deleted"}, 200
+        return "", 204

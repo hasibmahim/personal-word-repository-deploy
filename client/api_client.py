@@ -83,20 +83,19 @@ class WordRepositoryApiClient:
         self,
         word_id: str,
         *,
-        text: str | None = None,
-        language: str | None = None,
-        part_of_speech_id: int | None = None,
-        category_ids: list[str] | None = None,
+        user_id: str,
+        text: str,
+        language: str,
+        part_of_speech_id: int,
+        category_ids: list[str],
     ) -> dict[str, Any]:
-        payload: dict[str, Any] = {}
-        if text is not None:
-            payload["text"] = text
-        if language is not None:
-            payload["language"] = language
-        if part_of_speech_id is not None:
-            payload["part_of_speech_id"] = part_of_speech_id
-        if category_ids is not None:
-            payload["category_ids"] = category_ids
+        payload = {
+            "user_id": user_id,
+            "text": text,
+            "language": language,
+            "part_of_speech_id": part_of_speech_id,
+            "category_ids": category_ids,
+        }
         return self._request("PUT", f"/words/{word_id}", json=payload)
 
     def delete_word(self, word_id: str) -> dict[str, Any]:
@@ -116,8 +115,18 @@ class WordRepositoryApiClient:
     def get_category(self, category_id: str) -> dict[str, Any]:
         return self._request("GET", f"/categories/{category_id}")
 
-    def update_category(self, category_id: str, name: str) -> dict[str, Any]:
-        return self._request("PUT", f"/categories/{category_id}", json={"name": name})
+    def update_category(
+        self,
+        category_id: str,
+        *,
+        user_id: str,
+        name: str,
+    ) -> dict[str, Any]:
+        return self._request(
+            "PUT",
+            f"/categories/{category_id}",
+            json={"user_id": user_id, "name": name},
+        )
 
     def delete_category(self, category_id: str) -> dict[str, Any]:
         return self._request("DELETE", f"/categories/{category_id}")
@@ -144,17 +153,17 @@ class WordRepositoryApiClient:
         self,
         translation_id: str,
         *,
-        text: str | None = None,
-        language: str | None = None,
-        note: str | None = None,
+        word_id: str,
+        text: str,
+        language: str,
+        note: str | None,
     ) -> dict[str, Any]:
-        payload: dict[str, Any] = {}
-        if text is not None:
-            payload["text"] = text
-        if language is not None:
-            payload["language"] = language
-        if note is not None:
-            payload["note"] = note
+        payload = {
+            "word_id": word_id,
+            "text": text,
+            "language": language,
+            "note": note,
+        }
         return self._request("PUT", f"/translations/{translation_id}", json=payload)
 
     def delete_translation(self, translation_id: str) -> dict[str, Any]:

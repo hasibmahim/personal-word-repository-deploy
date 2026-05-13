@@ -12,6 +12,7 @@
         </div>
       </div>
       <form class="stack-form" method="post" action="{{ url_for('update_word', word_id=word.id) }}">
+        <input type="hidden" name="user_id" value="{{ word.user_id }}">
         <label>
           <span>Word text</span>
           <input type="text" name="text" value="{{ word.text }}" required>
