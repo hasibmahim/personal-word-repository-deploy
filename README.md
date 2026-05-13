@@ -2,7 +2,7 @@
 # PERSONAL WORD REPOSITORY
 # Group information
 * Student 1. Sami Häkkilä - sami.hakkila@student.oulu.fi
-* Student 3. Syed Mahim - Syed.Mahim@student.oulu.fi
+* Student 2. Syed Mahim - Syed.Mahim@student.oulu.fi
 
 
 This project implements a RESTful API for storing, categorizing and translating personal vocabulary. The repository includes full documentation on setup, database initialization, running the API, and code quality verification.
