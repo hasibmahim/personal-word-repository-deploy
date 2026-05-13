@@ -114,6 +114,20 @@ class FakeStudyPackClient:
     def category_pack(self, user_id, category_id):
         return {"count": 1, "items": [{"text": "train", "language": "fr"}]}
 
+    def quiz_pack(self, user_id, *, count=5, category_id=None):
+        return {
+            "count": count,
+            "questions": [
+                {
+                    "question_id": 1,
+                    "prompt": "bonjour",
+                    "prompt_language": "fr",
+                    "accepted_answers": ["hello"],
+                    "choices": ["hello", "cat"],
+                }
+            ],
+        }
+
 
 def test_state_store_round_trip(tmp_path: Path):
     store = StateStore(tmp_path / "client_state.json")
@@ -253,3 +267,24 @@ def test_gui_study_packs_page_renders_random_pack(tmp_path: Path):
     assert response.status_code == 200
     assert b"salut" in response.data
     assert b"3 item(s)" in response.data
+
+
+def test_gui_study_packs_page_renders_quiz_pack(tmp_path: Path):
+    api_client = FakeApiClient()
+    user = api_client.create_user("learner@example.com", "secret123")
+    store = StateStore(tmp_path / "gui_state.json")
+    store.save(ClientState(users=[user], active_user_id=user["id"]))
+    app = create_web_app(
+        api_client=api_client,
+        study_pack_client=FakeStudyPackClient(),
+        state_store=store,
+    )
+
+    response = app.test_client().post(
+        "/study-packs",
+        data={"action": "quiz", "count": "4", "category_id": ""},
+    )
+
+    assert response.status_code == 200
+    assert b"bonjour" in response.data
+    assert b"hello" in response.data

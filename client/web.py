@@ -328,6 +328,7 @@ def create_web_app(
             random_pack=None,
             missing_pack=None,
             category_pack=None,
+            quiz_pack=None,
             study_error=None,
         )
 
@@ -342,6 +343,7 @@ def create_web_app(
         random_pack = None
         missing_pack = None
         category_pack = None
+        quiz_pack = None
         study_error = None
 
         try:
@@ -353,6 +355,14 @@ def create_web_app(
             elif action == "category":
                 category_id = request.form.get("category_id", "").strip()
                 category_pack = study_client().category_pack(active_user["id"], category_id)
+            elif action == "quiz":
+                count = int(request.form.get("count", "5"))
+                category_id = request.form.get("category_id", "").strip() or None
+                quiz_pack = study_client().quiz_pack(
+                    active_user["id"],
+                    count=count,
+                    category_id=category_id,
+                )
         except (ValueError, StudyPackError) as error:
             study_error = str(error)
 
@@ -362,6 +372,7 @@ def create_web_app(
             random_pack=random_pack,
             missing_pack=missing_pack,
             category_pack=category_pack,
+            quiz_pack=quiz_pack,
             study_error=study_error,
         )
 

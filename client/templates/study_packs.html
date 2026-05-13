@@ -103,4 +103,54 @@
       </div>
     {% endif %}
   </section>
+
+  <section class="panel">
+    <div class="panel-header">
+      <div>
+        <p class="eyebrow">Quiz pack</p>
+        <h3>Build a quick translation quiz</h3>
+      </div>
+    </div>
+    <form class="stack-form inline-form" method="post" action="{{ url_for('load_study_packs') }}">
+      <input type="hidden" name="action" value="quiz">
+      <label>
+        <span>Question count</span>
+        <input type="number" name="count" value="5" min="1" max="20">
+      </label>
+      <label>
+        <span>Category (optional)</span>
+        <select name="category_id">
+          <option value="">All categories</option>
+          {% for category in categories %}
+            <option value="{{ category.id }}">{{ category.name }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <button type="submit">Generate quiz</button>
+    </form>
+
+    {% if quiz_pack %}
+      <div class="pack-results">
+        <p class="inline-note">{{ quiz_pack["count"] }} question(s)</p>
+        <div class="stack-list">
+          {% for question in quiz_pack["questions"] %}
+            <div class="translation-card">
+              <strong>Q{{ question["question_id"] }}. {{ question["prompt"] }} ({{ question["prompt_language"] }})</strong>
+              <ul class="resource-list">
+                {% for choice in question["choices"] %}
+                  <li>
+                    <div>{{ choice }}</div>
+                  </li>
+                {% endfor %}
+              </ul>
+              <p class="inline-note">
+                Accepted answer{{ "" if question["accepted_answers"]|length == 1 else "s" }}:
+                {{ question["accepted_answers"]|join(", ") }}
+              </p>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% endif %}
+  </section>
 {% endblock %}

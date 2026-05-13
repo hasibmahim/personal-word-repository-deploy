@@ -72,6 +72,15 @@ class FakeStudyPackService:
             "items": [],
         }
 
+    def quiz_pack(self, user_id, *, count, category_id=None):
+        return {
+            "type": "quiz",
+            "user_id": user_id,
+            "category_id": category_id,
+            "count": count,
+            "questions": [],
+        }
+
 
 def test_study_pack_service_builds_random_pack_from_live_words():
     service = StudyPackService(FakeMainApiClient())
@@ -102,6 +111,18 @@ def test_study_pack_service_filters_words_by_category():
     assert payload["type"] == "by_category"
     assert payload["category_name"] == "verbs"
     assert [item["id"] for item in payload["items"]] == ["word-1"]
+
+
+def test_study_pack_service_builds_quiz_questions():
+    service = StudyPackService(FakeMainApiClient())
+
+    payload = service.quiz_pack("user-1", count=5)
+
+    assert payload["type"] == "quiz"
+    assert payload["count"] == 1
+    assert payload["questions"][0]["prompt"] == "run"
+    assert payload["questions"][0]["accepted_answers"] == ["juosta"]
+    assert "juosta" in payload["questions"][0]["choices"]
 
 
 def test_auxiliary_healthz_returns_ok():
@@ -157,3 +178,23 @@ def test_auxiliary_routes_return_upstream_error_as_502():
 
     assert response.status_code == 502
     assert response.get_json()["error"] == "upstream failed"
+
+
+def test_quiz_study_pack_requires_user_id():
+    app = create_app({"STUDY_PACK_SERVICE": FakeStudyPackService()})
+    client = app.test_client()
+
+    response = client.get("/study-pack/quiz")
+
+    assert response.status_code == 400
+    assert response.get_json()["error"] == "user_id is required"
+
+
+def test_quiz_study_pack_rejects_non_positive_count():
+    app = create_app({"STUDY_PACK_SERVICE": FakeStudyPackService()})
+    client = app.test_client()
+
+    response = client.get("/study-pack/quiz?user_id=tester&count=0")
+
+    assert response.status_code == 400
+    assert response.get_json()["error"] == "count must be greater than zero"

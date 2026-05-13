@@ -117,6 +117,49 @@ class StudyPackService:
             "items": items,
         }
 
+    def quiz_pack(
+        self,
+        user_id: str,
+        *,
+        count: int,
+        category_id: str | None = None,
+    ) -> dict[str, Any]:
+        """Build a quiz-style study pack from words that already have translations."""
+        category_name = None
+        if category_id is not None:
+            categories = {
+                category["id"]: category
+                for category in self.api_client.list_categories(user_id)
+            }
+            category_name = categories.get(category_id, {}).get("name")
+
+        items = [
+            item
+            for item in self._load_words_with_translations(user_id, category_id=category_id)
+            if item["translations"]
+        ]
+
+        chosen_items = self.rng.sample(items, k=min(count, len(items))) if items else []
+        distractor_pool = self._build_distractor_pool(items)
+        questions = [
+            self._build_question(item, distractor_pool)
+            for index, item in enumerate(chosen_items, start=1)
+        ]
+        for index, question in enumerate(questions, start=1):
+            question["question_id"] = index
+
+        return {
+            "type": "quiz",
+            "user_id": user_id,
+            "quiz_scope": "category" if category_id else "random",
+            "category_id": category_id,
+            "category_name": category_name,
+            "count": len(questions),
+            "requested_count": count,
+            "source_api": self.api_client.base_url,
+            "questions": questions,
+        }
+
     def _load_words_with_translations(
         self,
         user_id: str,
@@ -130,6 +173,38 @@ class StudyPackService:
         return {
             **word,
             "translations": self.api_client.list_translations(word["id"]),
+        }
+
+    def _build_distractor_pool(self, items: list[dict[str, Any]]) -> list[str]:
+        pool = []
+        for item in items:
+            for translation in item["translations"]:
+                pool.append(translation["text"])
+        return pool
+
+    def _build_question(
+        self,
+        item: dict[str, Any],
+        distractor_pool: list[str],
+    ) -> dict[str, Any]:
+        accepted_answers = [translation["text"] for translation in item["translations"]]
+        distractors = [
+            answer
+            for answer in distractor_pool
+            if answer not in accepted_answers
+        ]
+        sampled_distractors = (
+            self.rng.sample(distractors, k=min(3, len(distractors)))
+            if distractors
+            else []
+        )
+        choices = sampled_distractors + [accepted_answers[0]]
+        self.rng.shuffle(choices)
+        return {
+            "prompt": item["text"],
+            "prompt_language": item["language"],
+            "accepted_answers": accepted_answers,
+            "choices": choices,
         }
 
 
@@ -187,6 +262,31 @@ def create_app(config: dict[str, Any] | None = None) -> Flask:
             return jsonify({"error": "category_id is required"}), 400
 
         return _serve_pack(lambda service: service.category_pack(user_id, category_id))
+
+    @app.get("/study-pack/quiz")
+    def quiz_study_pack() -> tuple[Any, int]:
+        user_id = request.args.get("user_id")
+        count = request.args.get("count", default="5")
+        category_id = request.args.get("category_id")
+
+        if not user_id:
+            return jsonify({"error": "user_id is required"}), 400
+
+        try:
+            count_value = int(count)
+        except ValueError:
+            return jsonify({"error": "count must be an integer"}), 400
+
+        if count_value <= 0:
+            return jsonify({"error": "count must be greater than zero"}), 400
+
+        return _serve_pack(
+            lambda service: service.quiz_pack(
+                user_id,
+                count=count_value,
+                category_id=category_id,
+            )
+        )
 
     return app
 

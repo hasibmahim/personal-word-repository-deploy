@@ -44,6 +44,18 @@ class StudyPackClient:
             params={"user_id": user_id, "category_id": category_id},
         )
 
+    def quiz_pack(
+        self,
+        user_id: str,
+        *,
+        count: int = 5,
+        category_id: str | None = None,
+    ) -> dict[str, Any]:
+        params: dict[str, Any] = {"user_id": user_id, "count": count}
+        if category_id is not None:
+            params["category_id"] = category_id
+        return self._request("GET", "/study-pack/quiz", params=params)
+
     def _request(self, method: str, path: str, **kwargs: Any) -> Any:
         try:
             response = self.session.request(

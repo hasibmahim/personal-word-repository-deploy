@@ -19,6 +19,7 @@ This keeps derived learning logic outside the main CRUD API.
 - `GET /study-pack/random`
 - `GET /study-pack/missing-translations`
 - `GET /study-pack/by-category`
+- `GET /study-pack/quiz`
 
 All study-pack endpoints validate their query parameters and derive their
 responses from the live main API.
