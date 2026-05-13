@@ -2,7 +2,6 @@
 # PERSONAL WORD REPOSITORY
 # Group information
 * Student 1. Sami Häkkilä - sami.hakkila@student.oulu.fi
-* Student 2. Saara Laasonen - Saara.Laasonen@student.oulu.fi
 * Student 3. Syed Mahim - Syed.Mahim@student.oulu.fi
 
 
